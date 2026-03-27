@@ -1,0 +1,11 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: entremenes-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: entremenes
+    ports:
+      - "5432:5432"
