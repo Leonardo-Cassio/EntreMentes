@@ -9,12 +9,16 @@ datasource db {
 
 model User {
   id        String   @id @default(uuid())
-  nome      String
+  name      String
   email     String   @unique
-  senha     String
+  password  String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  humores   Humor[]
+  humores         Humor[]
+  registrosBemEstar RegistroBemEstar[]
+  perfilComportamental PerfilComportamental?
+  sequenciaHumor  SequenciaHumor?
 }
 
 model Humor {
@@ -24,4 +28,78 @@ model Humor {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
+}
+
+model RegistroBemEstar {
+  id                    String   @id @default(uuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id])
+
+  nivelHumor            Int
+  nota                  String?
+  tempoTela             Float
+  duracaoSono           Float
+  atividadeFisica       Float
+  nivelEstresse         NivelEstresse
+  ansiedadeAntesProva   Boolean
+  desempenhoAcademico   DesempenhoAcademico
+
+  createdAt             DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model DefinicaoCluster {
+  id                Int      @id @default(autoincrement())
+  clusterLabel      Int      @unique
+  nomePerfil        String
+  descricao         String
+  dadosCentroide    Json
+  caracteristicas   Json
+  quantidadeAlunos  Int      @default(0)
+  generatedAt       DateTime @default(now())
+
+  perfis PerfilComportamental[]
+}
+
+model PerfilComportamental {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+
+  clusterId    Int
+  cluster      DefinicaoCluster @relation(fields: [clusterId], references: [id])
+
+  nivelRisco   NivelRisco
+  insights     Json
+  generatedAt  DateTime @default(now())
+}
+
+model SequenciaHumor {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id])
+
+  sequenciaAtual   Int      @default(0)
+  maiorSequencia   Int      @default(0)
+  ultimaData       DateTime?
+  updatedAt        DateTime @updatedAt
+}
+
+enum NivelEstresse {
+  Baixo
+  Medio
+  Alto
+}
+
+enum DesempenhoAcademico {
+  Melhorou
+  Mesmo
+  Piorou
+}
+
+enum NivelRisco {
+  Baixo
+  Moderado
+  Alto
 }
