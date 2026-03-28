@@ -22,6 +22,8 @@ A solução é distribuída em microserviços e interfaces multiplataforma:
 
 Para garantir que a API principal continue rápida e não aguarde o processamento custoso de inteligência artificial na requisição HTTP, utilizamos uma arquitetura orientada a eventos. 
 
+![Fluxo do Sistema](./Documentação/Fluxo-do-Sistema.png)
+
 O fluxo funciona da seguinte maneira:
 1. **O usuário envia o registro de humor:** App Mobile `POST /mood`. O Node.js salva no banco e **publica um evento** no tópico `mood-registered`.
 2. **Mineração de Dados Asíncrona:** O Mining Service assina (`subscriber`) esse tópico, recebe os dados, roda o algoritmo **K-Means** e define o cluster do aluno.
