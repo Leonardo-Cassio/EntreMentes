@@ -17,6 +17,20 @@ A solução é distribuída em microserviços e interfaces multiplataforma:
 
 ---
 
+## �️ Modelagem de Dados e Documentação
+
+O projeto conta com uma diagramação de banco de dados pensada para suportar tanto os atributos comportamentais quanto a associação de clusters do modelo não supervisionado.
+
+### Modelo Conceitual
+![Modelo Conceitual](./Documentação/BD%20-%20Conceitual.jpeg)
+
+### Modelo Lógico
+![Modelo Lógico](./Documentação/BD%20-%20Logico.jpeg)
+
+*(Acesse também a [Documentação em PDF](./Documentação/EntreMentes%20Documentação.pdf) na pasta correspondente).*
+
+---
+
 ## 🛠 Tecnologias Utilizadas
 
 ### Backend
