@@ -21,22 +21,135 @@ mining-service/  → Python 3.11 + Flask + scikit-learn
 docs/            → Documentação do PI por sprint
 ```
 
-Todos os serviços rodam separadamente e se comunicam via HTTP/REST.
+Todos os serviços se comunicam via HTTP/REST e Google Cloud Pub/Sub.
 Deploy em Railway (free tier). Banco PostgreSQL hospedado no Railway.
 
 ---
 
 ## Stack e versões
 
-| Camada        | Tecnologia                        |
-|---------------|-----------------------------------|
-| Mobile        | React Native 0.74, Expo SDK 51    |
-| Web           | React 18, Recharts 2              |
-| Backend       | Node.js v24 LTS, Express 4, Prisma 5 |
-| Banco         | PostgreSQL 16                     |
-| Mineração     | Python 3.11, Flask 3, scikit-learn 1.4, pandas 2, numpy 1.26 |
-| Auth          | JWT (jsonwebtoken), bcrypt        |
-| Docs API      | swagger-jsdoc + swagger-ui-express |
+| Camada     | Tecnologia                                               |
+|------------|----------------------------------------------------------|
+| Mobile     | React Native 0.74, Expo SDK 51                           |
+| Web        | React 18, Recharts 2                                     |
+| Backend    | Node.js v24 LTS, Express 4, Prisma 5                     |
+| Banco      | PostgreSQL 16                                            |
+| Mineração  | Python 3.11, Flask 3, scikit-learn 1.4, pandas 2, numpy 1.26 |
+| Mensageria | Google Cloud Pub/Sub (@google-cloud/pubsub, google-cloud-pubsub) |
+| Auth       | JWT (jsonwebtoken), bcrypt                               |
+| Docs API   | swagger-jsdoc + swagger-ui-express                       |
+
+---
+
+## Mensageria — Google Cloud Pub/Sub
+
+O Pub/Sub é o serviço de nuvem central do projeto. Ele desacopla o backend Node.js
+do serviço de mineração Python. A classificação de perfil ocorre de forma assíncrona
+toda vez que um novo registro de humor é salvo.
+
+### Fluxo
+
+```
+App Mobile
+  └─► POST /mood ─► API Backend ─► salva no PostgreSQL
+                              └─► publica em: mood-registered
+                                        │
+                                   [Google Cloud Pub/Sub]
+                                        │
+                              sub: mining-worker
+                                        │
+                              Serviço Python
+                              └─► classifica com K-Means
+                              └─► publica em: profile-classified
+                                        │
+                                   [Google Cloud Pub/Sub]
+                                        │
+                              sub: profile-classified-backend
+                                        │
+                              API Backend
+                              └─► atualiza behavioral_profiles
+                              └─► perfil disponível para o usuário
+```
+
+### Tópicos
+
+| Tópico                 | Publisher | Subscriber      |
+|------------------------|-----------|-----------------|
+| `mood-registered`      | Node.js   | Python (mining) |
+| `profile-classified`   | Python    | Node.js         |
+
+### Formato — mood-registered
+```json
+{
+  "userId": "uuid",
+  "entryId": "uuid",
+  "moodLevel": 3,
+  "screenTime": 8.5,
+  "sleepDuration": 5.0,
+  "physicalActivity": 1.0,
+  "stressLevel": "Alto",
+  "anxiousBeforeExams": true,
+  "academicPerformance": "Mesmo",
+  "timestamp": "2026-03-27T22:00:00Z"
+}
+```
+
+### Formato — profile-classified
+```json
+{
+  "userId": "uuid",
+  "clusterId": 2,
+  "profileName": "Sob Pressão",
+  "riskLevel": "Moderado-Alto",
+  "insights": ["Sono abaixo da média", "Atividade física muito baixa"],
+  "recommendations": ["Durma mais", "Faça exercício", "Reduza tempo de tela"],
+  "processedAt": "2026-03-27T22:00:05Z"
+}
+```
+
+### Implementação Node.js
+```javascript
+// backend/src/services/pubsub.service.js
+const { PubSub } = require('@google-cloud/pubsub');
+const pubsub = new PubSub({ projectId: process.env.GCP_PROJECT_ID });
+
+async function publishMoodRegistered(data) {
+  const topic = pubsub.topic('mood-registered');
+  await topic.publishMessage({ data: Buffer.from(JSON.stringify(data)) });
+}
+
+async function subscribeProfileClassified() {
+  const sub = pubsub.subscription('profile-classified-backend');
+  sub.on('message', async (message) => {
+    const data = JSON.parse(message.data.toString());
+    await updateUserProfile(data); // atualiza behavioral_profiles
+    message.ack();
+  });
+}
+
+module.exports = { publishMoodRegistered, subscribeProfileClassified };
+```
+
+### Implementação Python
+```python
+# mining-service/pubsub_consumer.py
+from google.cloud import pubsub_v1
+import json, os
+
+subscriber = pubsub_v1.SubscriberClient()
+publisher  = pubsub_v1.PublisherClient()
+
+sub_path    = subscriber.subscription_path(os.environ['GCP_PROJECT_ID'], 'mining-worker')
+topic_path  = publisher.topic_path(os.environ['GCP_PROJECT_ID'], 'profile-classified')
+
+def callback(message):
+    data   = json.loads(message.data.decode('utf-8'))
+    result = classify_user(data)  # chama classifier.py
+    publisher.publish(topic_path, json.dumps(result).encode('utf-8'))
+    message.ack()
+
+subscriber.subscribe(sub_path, callback=callback)
+```
 
 ---
 
@@ -61,29 +174,27 @@ model User {
 model WellbeingMoodEntry {
   id                   String   @id @default(uuid())
   userId               String
-  moodLevel            Int      // 1 a 5
+  moodLevel            Int
   note                 String?
-  screenTime           Float    // horas/dia (0-24)
-  sleepDuration        Float    // horas (0-16)
-  physicalActivity     Float    // horas/semana (0-40)
-  stressLevel          String   // "Baixo" | "Médio" | "Alto"
+  screenTime           Float
+  sleepDuration        Float
+  physicalActivity     Float
+  stressLevel          String
   anxiousBeforeExams   Boolean
-  academicPerformance  String   // "Melhorou" | "Mesmo" | "Piorou"
+  academicPerformance  String
   createdAt            DateTime @default(now())
-
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ClusterDefinition {
-  id             Int      @id @default(autoincrement())
-  clusterLabel   Int      @unique  // 0, 1, 2, 3
-  profileName    String   // "Equilibrado" | "Moderado" | "Sob Pressão" | "Em Alerta"
-  description    String
-  centroidData   Json
+  id              Int      @id @default(autoincrement())
+  clusterLabel    Int      @unique
+  profileName     String
+  description     String
+  centroidData    Json
   characteristics Json
-  studentCount   Int      @default(0)
-  generatedAt    DateTime @default(now())
-
+  studentCount    Int      @default(0)
+  generatedAt     DateTime @default(now())
   profiles BehavioralProfile[]
 }
 
@@ -91,22 +202,20 @@ model BehavioralProfile {
   id          String   @id @default(uuid())
   userId      String   @unique
   clusterId   Int
-  riskLevel   String   // "Baixo" | "Moderado" | "Alto"
+  riskLevel   String
   insights    Json
   generatedAt DateTime @default(now())
-
   user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   cluster ClusterDefinition @relation(fields: [clusterId], references: [id])
 }
 
 model MoodStreak {
-  id             String   @id @default(uuid())
-  userId         String   @unique
-  currentStreak  Int      @default(0)
-  longestStreak  Int      @default(0)
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  currentStreak  Int       @default(0)
+  longestStreak  Int       @default(0)
   lastEntryDate  DateTime?
-  updatedAt      DateTime @updatedAt
-
+  updatedAt      DateTime  @updatedAt
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 ```
@@ -118,81 +227,42 @@ model MoodStreak {
 Base URL: `http://localhost:3000/api`
 
 ### Auth
-- `POST /auth/register` — cadastro (name, email, password, course, semester)
-- `POST /auth/login` — login → retorna JWT
-- `POST /auth/logout` — invalida token
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/logout`
 
 ### Users
-- `GET /users/me` — perfil do usuário autenticado
-- `PUT /users/me` — atualiza perfil
-- `DELETE /users/me` — exclui conta
+- `GET /users/me`
+- `PUT /users/me`
+- `DELETE /users/me`
 
 ### Mood
-- `POST /mood` — registra humor do dia
-- `GET /mood` — histórico (query: ?from=&to=&limit=)
-- `GET /mood/:id` — registro específico
-- `PUT /mood/:id` — atualiza registro do dia
+- `POST /mood` — salva registro e publica no Pub/Sub automaticamente
+- `GET /mood` — histórico (?from=&to=&limit=)
+- `GET /mood/:id`
+- `PUT /mood/:id`
 
 ### Analytics
-- `GET /analytics/summary` — média, distribuição, correlações
-- `GET /analytics/profile` — perfil comportamental do usuário
-- `POST /analytics/classify` — aciona classificação no serviço Python
+- `GET /analytics/summary`
+- `GET /analytics/profile` — retorna perfil classificado via Pub/Sub
 
 ### Mining Service (Flask — porta 5000)
-- `POST /classify` — recebe dados do usuário, retorna perfil + insights
-- `POST /train` — re-treina K-Means com dados atualizados
-- `GET /clusters` — retorna definições dos 4 clusters
+- `GET /health`
+- `GET /clusters`
+
+> A classificação não é chamada via HTTP. É acionada automaticamente
+> pelo Pub/Sub quando um novo registro é publicado no tópico mood-registered.
 
 ---
 
 ## Os 4 perfis comportamentais (K-Means K=4)
 
-| Cluster | Nome         | Risco         | Características                                      |
-|---------|--------------|---------------|------------------------------------------------------|
-| 0       | Equilibrado  | Baixo         | Sono ~7.5h, exercício ~5h/sem, estresse baixo        |
-| 1       | Moderado     | Moderado      | Sono ~6h, exercício ~3h/sem, estresse médio          |
-| 2       | Sob Pressão  | Moderado-Alto | Sono ~5h, tela ~9h, sem exercício, estresse alto     |
-| 3       | Em Alerta    | Alto          | Sono ~4.5h, tela ~10h, sem exercício, desempenho caindo |
-
-Variáveis usadas no K-Means (6):
-- screenTime, sleepDuration, physicalActivity
-- stressLevel (0/1/2), anxiousBeforeExams (0/1), academicPerformance (0/1/2)
-
----
-
-## Convenções de código
-
-### Geral
-- Idioma do código: inglês (variáveis, funções, comentários)
-- Idioma das mensagens ao usuário: português
-- Sem comentários óbvios — apenas comentários que explicam o "porquê", não o "o quê"
-- Sempre usar async/await, nunca callbacks ou .then() encadeados
-- Variáveis de ambiente sempre via process.env — nunca hardcoded
-
-### Backend (Node.js)
-- Controllers finos: lógica de negócio fica em services/
-- Sempre validar input com express-validator antes de chegar no controller
-- Respostas padronizadas: { success: true/false, data: {}, message: "" }
-- Erros com status HTTP correto: 400 validação, 401 auth, 403 permissão, 404 não encontrado, 500 servidor
-- Middleware de auth em todas as rotas protegidas
-- Documentar cada endpoint com JSDoc para o swagger-jsdoc gerar automaticamente
-
-### Python (Flask)
-- Carregar modelo K-Means treinado via joblib no startup da aplicação
-- Normalizar inputs antes de classificar (StandardScaler salvo junto com o modelo)
-- Retornar sempre JSON com: { cluster, profileName, riskLevel, insights, recommendations }
-- Usar flask-cors para aceitar requisições do backend Node
-
-### React Native
-- Sempre usar StyleSheet.create() — sem estilos inline
-- Axios para chamadas à API — instância configurada em services/api.js
-- AsyncStorage para guardar o JWT localmente
-- Navegação com React Navigation (stack + bottom tabs)
-
-### React Web
-- Recharts para todos os gráficos
-- Axios com instância configurada em services/api.js
-- Context API para estado global do usuário autenticado
+| Cluster | Nome         | Risco         | Características                              |
+|---------|--------------|---------------|----------------------------------------------|
+| 0       | Equilibrado  | Baixo         | Sono ~7.5h, exercício ~5h/sem, estresse baixo |
+| 1       | Moderado     | Moderado      | Sono ~6h, exercício ~3h/sem, estresse médio  |
+| 2       | Sob Pressão  | Moderado-Alto | Sono ~5h, tela ~9h, sem exercício, estresse alto |
+| 3       | Em Alerta    | Alto          | Sono ~4.5h, tela ~10h, desempenho caindo     |
 
 ---
 
@@ -205,69 +275,59 @@ NODE_ENV=development
 DATABASE_URL="postgresql://postgres:postgres123@localhost:5432/entrementes"
 JWT_SECRET=troque_esta_chave_por_algo_seguro
 JWT_EXPIRES_IN=7d
-MINING_SERVICE_URL=http://localhost:5000
+GCP_PROJECT_ID=entrementes-pi
+GOOGLE_APPLICATION_CREDENTIALS=./gcp-credentials.json
 ```
 
 ### mining-service/.env
 ```
 FLASK_ENV=development
 FLASK_PORT=5000
-NODE_API_URL=http://localhost:3000
+GCP_PROJECT_ID=entrementes-pi
+GOOGLE_APPLICATION_CREDENTIALS=./gcp-credentials.json
+GCP_SUBSCRIPTION_ID=mining-worker
+GCP_TOPIC_RESULT=profile-classified
 ```
 
 ---
 
 ## Regras importantes
 
-- NUNCA commitar arquivos .env com dados reais
-- NUNCA retornar passwordHash em nenhuma resposta da API
-- NUNCA fazer diagnóstico psicológico — o sistema apenas identifica padrões
-- Sempre incluir disclaimer nos insights: "Este resultado não substitui acompanhamento profissional"
-- Commits em português, descritivos: "feat: adiciona endpoint de registro de humor"
+- NUNCA commitar .env com dados reais
+- NUNCA commitar gcp-credentials.json — está no .gitignore
+- NUNCA retornar passwordHash em resposta da API
+- NUNCA fazer diagnóstico psicológico
+- Sempre incluir disclaimer: "Este resultado não substitui acompanhamento profissional"
+- Commits descritivos em português
 - Ambos os integrantes devem ter commits em todos os módulos
 
 ---
 
-## Estrutura de pastas esperada
+## Estrutura de pastas
 
 ```
 backend/
   src/
-    routes/         auth.routes.js, mood.routes.js, users.routes.js, analytics.routes.js
-    controllers/    auth.controller.js, mood.controller.js, ...
-    services/       auth.service.js, mood.service.js, mining.service.js, ...
-    middlewares/    auth.middleware.js, validate.middleware.js
-    swagger/        swagger.config.js
+    routes/       auth, mood, users, analytics
+    controllers/
+    services/     auth.service.js, mood.service.js, pubsub.service.js
+    middlewares/  auth.middleware.js, validate.middleware.js
+    swagger/
   prisma/
-    schema.prisma
-    migrations/
-  .env
-  server.js
+  gcp-credentials.json  ← no .gitignore
+  .env / server.js
 
 mining-service/
   app.py
-  kmeans.py          treino e re-treino do modelo
-  classifier.py      classificação de usuário individual
-  data/              dataset universitário CSV
-  models/            modelo_kmeans.joblib, scaler.joblib
-  requirements.txt
-  .env
+  kmeans.py / classifier.py
+  pubsub_consumer.py
+  data/ / models/
+  gcp-credentials.json  ← no .gitignore
+  requirements.txt / .env
 
 mobile/
-  src/
-    screens/         LoginScreen, RegisterScreen, HomeScreen, HistoryScreen, ProfileScreen
-    components/      MoodPicker, MoodCard, StreakBadge, ...
-    services/        api.js
-    navigation/      AppNavigator.js
-  app.json
-  App.js
+  src/screens/ components/ services/ navigation/
 
 web/
-  src/
-    pages/           Dashboard, Login, Profile
-    components/      MoodChart, WeeklyChart, ProfileCard, ...
-    services/        api.js
-    context/         AuthContext.js
-  public/
-  package.json
+  src/pages/ components/ services/ context/
 ```

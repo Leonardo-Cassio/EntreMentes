@@ -14,10 +14,25 @@ A solução é distribuída em microserviços e interfaces multiplataforma:
 - **Web:** React.js (Recharts) — Dashboard Administrativo/Visualização detalhada.
 - **Backend (API):** Node.js, Express e PostgreSQL (Prisma ORM) — Responsável pelas conexões, banco de dados, auth e regras de negócio.
 - **Mining Service:** Python (Flask, scikit-learn, pandas) — Serviço de Inteligência Artificial que consome dados, treina o K-Means e devolve o agrupamento dos usuários.
+- **Mensageria (Event-driven):** Google Cloud Pub/Sub — Responsável por desacoplar o backend (Node.js) do serviço de mineração de dados (Python), realizando processamento assíncrono.
 
 ---
 
-## �️ Modelagem de Dados e Documentação
+## 📡 Mensageria e Fluxo de IA (Google Cloud Pub/Sub)
+
+Para garantir que a API principal continue rápida e não aguarde o processamento custoso de inteligência artificial na requisição HTTP, utilizamos uma arquitetura orientada a eventos. 
+
+O fluxo funciona da seguinte maneira:
+1. **O usuário envia o registro de humor:** App Mobile `POST /mood`. O Node.js salva no banco e **publica um evento** no tópico `mood-registered`.
+2. **Mineração de Dados Asíncrona:** O Mining Service assina (`subscriber`) esse tópico, recebe os dados, roda o algoritmo **K-Means** e define o cluster do aluno.
+3. **Classificação Devolvida:** O Python **publica o resultado** no tópico `profile-classified`.
+4. **Atualização no Banco:** O Node.js (que assina esse segundo tópico) intercepta o resultado e atualiza a tabela `BehavioralProfile` silenciosamente. 
+
+Quando o usuário checar seu perfil pelo App ou Web, os dados já estarão processados e salvos.
+
+---
+
+## 🗄️ Modelagem de Dados e Documentação
 
 O projeto conta com uma diagramação de banco de dados pensada para suportar tanto os atributos comportamentais quanto a associação de clusters do modelo não supervisionado.
 
@@ -38,11 +53,13 @@ O projeto conta com uma diagramação de banco de dados pensada para suportar ta
 - **Prisma ORM (v5)** para integração e migrações.
 - **PostgreSQL 16** (Deploy no Railway / Local via Docker).
 - **JWT (jsonwebtoken)** & **bcrypt** (Autenticação).
+- **Google Cloud Pub/Sub** (`@google-cloud/pubsub` para mensageria assíncrona).
 - **Swagger** (Documentação da API via swagger-jsdoc).
 
 ### Data Mining (Inteligência Artificial)
 - **Python 3.11** 
 - **Flask 3**
+- **Google Cloud Pub/Sub** (`google-cloud-pubsub` para assinar eventos e retornar classificação).
 - **scikit-learn 1.4**, **pandas 2**, **numpy 1.26** (Mineração, escalonamento e agrupamento).
 
 ### Frontend (Mobile e Web)
