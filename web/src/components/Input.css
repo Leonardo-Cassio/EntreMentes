@@ -1,0 +1,51 @@
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+  transition: border-color 0.2s;
+  padding: 0 14px;
+  height: 48px;
+}
+
+.input-wrapper.focused {
+  border-color: var(--primary);
+}
+
+.input-wrapper input {
+  flex: 1;
+  height: 100%;
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--text);
+  background: transparent;
+  padding: 0;
+}
+
+.input-wrapper input.has-icon {
+  padding-left: 10px;
+}
+
+.input-wrapper input::placeholder {
+  color: var(--text-light);
+}
+
+.input-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.toggle-password {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}

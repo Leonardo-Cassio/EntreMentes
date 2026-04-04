@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx expo:*)",
+      "Bash(node -e \":*)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(npx vite:*)",
+      "Bash(grep -iE \"\\\\.\\(png|jpg|jpeg|webp|svg\\)$\")",
+      "Bash(ls -la \"C:/Users/gabri/Downloads/download.jpg\" \"C:/Users/gabri/Downloads/download \\(1\\).jpg\" \"C:/Users/gabri/Downloads/download \\(2\\).jpg\" \"C:/Users/gabri/Downloads/download \\(3\\).jpg\")",
+      "Bash(ls -la \"C:/Users/gabri/Downloads/Desenho De O Cérebro\"*)",
+      "Bash(ls -la \"C:/Users/gabri/Downloads/\"*Cerebro*)",
+      "Bash(ls -la \"C:/Users/gabri/Downloads/\"*cer*)",
+      "Bash(cp \"C:/Users/gabri/Downloads/Cadeado.svg\" \"C:/Users/gabri/OneDrive/Desktop/EntreMentes/web/src/assets/cadeado.svg\")",
+      "Bash(cp \"C:/Users/gabri/Downloads/Cadeado.svg\" \"C:/Users/gabri/OneDrive/Desktop/EntreMentes/mobile/assets/cadeado.svg\")",
+      "Bash(cp \"C:/Users/gabri/OneDrive/Desktop/EntreMentes/Documentação/BD - Logico.jpeg\" /tmp/check.jpeg)",
+      "Bash(BRAIN_SRC=\"C:/Users/gabri/Downloads/Desenho De O Cérebro Humano PNG , Desenho Cerebral, Desenho De Chuva, Desenho De Homem Imagem PNG e PSD Para Download Gratuito 1.png\")",
+      "Bash(cp \"$BRAIN_SRC\" \"C:/Users/gabri/OneDrive/Desktop/EntreMentes/web/src/assets/cerebro.png\")",
+      "Bash(cp \"$BRAIN_SRC\" \"C:/Users/gabri/OneDrive/Desktop/EntreMentes/mobile/assets/cerebro.png\")"
+    ]
+  }
+}
