@@ -1,29 +1,31 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 
-const prisma = new PrismaClient();
+exports.register = async (name, email, password) => {
+  const hash = await bcrypt.hash(password, 10);
 
-exports.register = async (nome, email, senha) => {
-  const hash = await bcrypt.hash(senha, 10);
-
-  return prisma.user.create({
-    data: { nome, email, senha: hash }
+  const user = await prisma.user.create({
+    data: { name, email, password: hash }
   });
+
+  const { password: _, ...userWithoutPassword } = user;
+  return userWithoutPassword;
 };
 
-exports.login = async (email, senha) => {
+exports.login = async (email, password) => {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) throw new Error("Usuário não encontrado");
 
-  const valid = await bcrypt.compare(senha, user.senha);
+  const valid = await bcrypt.compare(password, user.password);
 
   if (!valid) throw new Error("Senha inválida");
 
-  const token = jwt.sign({ id: user.id }, "segredo", {
+  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
     expiresIn: "1d"
   });
 
-  return { user, token };
+  const { password: _, ...userWithoutPassword } = user;
+  return { user: userWithoutPassword, token };
 };

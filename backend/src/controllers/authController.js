@@ -2,25 +2,25 @@ const authService = require('../services/authService');
 
 exports.register = async (req, res) => {
   try {
-    const { nome, email, senha } = req.body;
+    const { name, email, password } = req.body;
 
-    const user = await authService.register(nome, email, senha);
+    const user = await authService.register(name, email, password);
 
-    res.json(user);
+    res.status(201).json({ success: true, data: user, message: "Usuário criado com sucesso" });
   } catch (err) {
-    res.status(400).json({ erro: err.message });
+    const status = err.code === 'P2002' ? 409 : 400;
+    res.status(status).json({ success: false, data: null, message: err.message });
   }
 };
 
 exports.login = async (req, res) => {
   try {
-    const { email, senha } = req.body;
+    const { email, password } = req.body;
 
-    const data = await authService.login(email, senha);
+    const data = await authService.login(email, password);
 
-    res.json(data);
+    res.json({ success: true, data, message: "Login realizado com sucesso" });
   } catch (err) {
-    console.log(err);
-    res.status(400).json({ erro: err.message });
+    res.status(401).json({ success: false, data: null, message: err.message });
   }
 };

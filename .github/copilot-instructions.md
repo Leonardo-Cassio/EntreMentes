@@ -1,5 +1,55 @@
 # EntreMentes — GitHub Copilot Instructions
 
+## ⚠️ Instrução de continuidade (OBRIGATÓRIO)
+
+**Antes de encerrar qualquer sessão de chat, o assistente DEVE atualizar este arquivo**
+refletindo o estado atual do projeto. Isso garante que o próximo chatbot consiga
+retomar exatamente de onde o anterior parou.
+
+### O que atualizar ao final de cada sessão:
+1. **Seção "Estado atual do desenvolvimento"** (abaixo) — marcar o que foi concluído,
+   o que ficou pendente e quais decisões foram tomadas.
+2. **Qualquer mudança arquitetural** — novos arquivos, renomeações, dependências
+   adicionadas ou removidas.
+3. **Bugs conhecidos ou débitos técnicos** identificados durante a sessão.
+
+### Estado atual do desenvolvimento
+
+> **Última atualização:** 2026-04-04
+>
+> **Sprint 1 — Fundação (Backend + BD)**
+> - [x] Schema Prisma com todos os models (User, Humor, RegistroBemEstar, DefinicaoCluster, PerfilComportamental, SequenciaHumor)
+> - [x] Docker Compose para PostgreSQL
+> - [x] Auth básica (register/login) com JWT + bcrypt
+> - [x] CRUD completo de RegistroBemEstar (mood/wellbeing) — POST, GET lista, GET por id, PUT, DELETE
+> - [x] CRUD de Users autenticado (GET /users/me, PUT /users/me, DELETE /users/me)
+> - [x] Prisma singleton centralizado em lib/prisma.js
+> - [x] Respostas HTTP padronizadas { success, data, message }
+> - [x] Middleware de auth usando JWT_SECRET do .env
+> - [ ] Validação de rotas com express-validator
+> - [ ] Swagger/OpenAPI para documentação interativa
+> - [ ] Integração Google Cloud Pub/Sub
+> - [ ] Refatorar nomes de arquivos humor → mood (progressivo)
+>
+> **Sprint 2 — Mineração + Integração (Pendente)**
+> - [ ] Mining Service Python (Flask + scikit-learn)
+> - [ ] Pub/Sub consumer e publisher
+> - [ ] Endpoint GET /analytics/profile
+>
+> **Sprint 3 — Frontend + Testes (Pendente)**
+> - [ ] App Mobile React Native
+> - [ ] Dashboard Web React
+> - [ ] Testes unitários e de integração
+
+---
+
+
+## Link FIGMA do projeto:
+
+ https://www.figma.com/design/t3bPkPFGW4uXckBCziasEx/EntreMentes?node-id=0-1&p=f&t=cpJM06Qzt1sGj8P5-0
+
+ Utilizar sempre para observar a identidade visual, todas as telas não precisam seguir a risca o design proposto do figma, é até recomendado que haja melhorias e adaptações, mas a identidade visual deve ser mantida.
+
 ## Visão geral do projeto
 
 EntreMentes é uma plataforma de registro e análise de humor de estudantes universitários.
