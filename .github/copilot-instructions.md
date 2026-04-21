@@ -15,7 +15,7 @@ retomar exatamente de onde o anterior parou.
 
 ### Estado atual do desenvolvimento
 
-> **Última atualização:** 2026-04-04
+> **Última atualização:** 2026-04-20
 >
 > **Sprint 1 — Fundação (Backend + BD)**
 > - [x] Schema Prisma com todos os models (User, Humor, RegistroBemEstar, DefinicaoCluster, PerfilComportamental, SequenciaHumor)
@@ -23,23 +23,115 @@ retomar exatamente de onde o anterior parou.
 > - [x] Auth básica (register/login) com JWT + bcrypt
 > - [x] CRUD completo de RegistroBemEstar (mood/wellbeing) — POST, GET lista, GET por id, PUT, DELETE
 > - [x] CRUD de Users autenticado (GET /users/me, PUT /users/me, DELETE /users/me)
-> - [x] Prisma singleton centralizado em lib/prisma.js
+> - [x] Prisma singleton centralizado em src/lib/prisma.js
 > - [x] Respostas HTTP padronizadas { success, data, message }
-> - [x] Middleware de auth usando JWT_SECRET do .env
+> - [x] Middleware de auth usando JWT_SECRET do .env (suporta formato Bearer)
+> - [x] CORS habilitado no server.js
 > - [ ] Validação de rotas com express-validator
 > - [ ] Swagger/OpenAPI para documentação interativa
 > - [ ] Integração Google Cloud Pub/Sub
 > - [ ] Refatorar nomes de arquivos humor → mood (progressivo)
 >
-> **Sprint 2 — Mineração + Integração (Pendente)**
-> - [ ] Mining Service Python (Flask + scikit-learn)
-> - [ ] Pub/Sub consumer e publisher
-> - [ ] Endpoint GET /analytics/profile
+> **Sprint 1 — Pré-processamento do Dataset**
+> - [x] Script preprocessing.py completo e documentado (data-analysis/)
+> - [x] EDA com estatísticas descritivas e 5 gráficos PNG gerados (data-analysis/graficos/)
+> - [x] Verificação de nulos, duplicatas e outliers (IQR)
+> - [x] Mapeamento PHQ9 → nivelHumor (1–5, escala clínica real — corrige bug do analysis.py)
+> - [x] Mapeamento AcademicStress → nivelEstresse (Enum Prisma)
+> - [x] Mapeamento GPA → desempenhoAcademico (Enum Prisma)
+> - [x] Normalização MinMaxScaler nas 6 features do K-Means
+> - [x] Exportação: dados_tratados.json (1800 registros, formato Prisma) + features_kmeans.csv (para K-Means)
 >
-> **Sprint 3 — Frontend + Testes (Pendente)**
-> - [ ] App Mobile React Native
-> - [ ] Dashboard Web React
+> **Sprint 1 — Frontend Mobile (React Native + Expo)**
+> - [x] Projeto Expo inicializado em mobile/ (SDK 54, React Native 0.81)
+> - [x] Dependências: react-navigation (native-stack + bottom-tabs), react-native-svg, expo-linear-gradient, @expo/vector-icons
+> - [x] Tema centralizado: src/theme/colors.js + fonts.js
+> - [x] Componentes reutilizáveis: Input.js (SVG icon, focus state, toggle senha) + Button.js (loading spinner)
+> - [x] CadeadoIcon.js em src/assets/ (SVG via react-native-svg — usa o Cadeado.svg do projeto)
+> - [x] Tela de Login (LoginScreen.js) — fiel ao iPhone 17-1 do Figma
+> - [x] Tela de Cadastro (RegisterScreen.js) — fiel ao iPhone 17-2 do Figma
+> - [x] AuthStack (Stack Navigator) configurado — Login ↔ Register
+> - [ ] AuthContext para gerenciar token JWT
+> - [ ] Bottom tabs (Dashboard, Humor, Histórico, Perfil)
+> - [ ] Tela Dashboard (iPhone 17-3 Figma)
+> - [ ] Tela Registro Diário (iPhone 17-5 Figma)
+>
+> **Sprint 1 — Frontend Web (React + Vite)**
+> - [x] Projeto React + Vite inicializado em web/
+> - [x] Dependências: react-router-dom
+> - [x] Estilos globais (CSS variables com paleta roxa #6C5CE7)
+> - [x] Componentes: Input.jsx (SVG icon, focus state, toggle senha) + Button.jsx (spinner)
+> - [x] CadeadoIcon.jsx e EmailIcon.jsx em src/assets/ (SVG puro, sem lib externa)
+> - [x] Imagem do cérebro (cerebro.png) copiada para src/assets/
+> - [x] Layout split-screen auth (42% painel roxo / 58% formulário)
+> - [x] Tela Login (LoginPage.jsx) — fiel ao Desktop-1 do Figma
+> - [x] Tela Cadastro (RegisterPage.jsx) — fiel ao Desktop-2 do Figma
+> - [x] Rotas configuradas (/login, /register) com redirect padrão
+> - [x] Responsivo: painel roxo some em telas < 900px
+> - [ ] AuthContext + proteção de rotas
+> - [ ] Dashboard (Desktop-3 Figma) com sidebar + gráficos Recharts
+> - [ ] Tela Registro Diário (Desktop-4 Figma)
+>
+> **Sprint 2 — Mineração + Integração (Pendente)**
+> - [ ] Mining Service Python (Flask + scikit-learn) em mining-service/
+> - [ ] Treinar K-Means (K=4) com features_kmeans.csv
+> - [ ] Pub/Sub consumer (mood-registered) e publisher (profile-classified)
+> - [ ] Endpoint GET /analytics/profile no backend
+>
+> **Sprint 3 — Finalização (Pendente)**
+> - [ ] Seed do banco com dados_tratados.json via Prisma
 > - [ ] Testes unitários e de integração
+> - [ ] Deploy Railway (backend + PostgreSQL)
+
+---
+
+### Arquivos criados/modificados nesta sessão
+```
+backend/src/lib/prisma.js                  ← Prisma singleton
+backend/src/server.js                      ← CORS + novas rotas /mood /users
+backend/src/middleware/authMiddleware.js   ← Bearer token + JWT_SECRET do .env
+backend/src/services/authService.js        ← Campos EN, sem expor senha
+backend/src/services/userService.js        ← getById, update, remove
+backend/src/services/moodService.js        ← CRUD RegistroBemEstar (NOVO)
+backend/src/services/humorService.js       ← Usa prisma singleton
+backend/src/controllers/authController.js  ← Formato padrão { success, data, message }
+backend/src/controllers/userController.js  ← GET/PUT/DELETE /me
+backend/src/controllers/moodController.js  ← CRUD completo (NOVO)
+backend/src/routes/userRoutes.js           ← /me com auth
+backend/src/routes/moodRoutes.js           ← 5 endpoints (NOVO)
+
+data-analysis/preprocessing.py            ← Pré-processamento documentado (NOVO)
+data-analysis/dados_tratados.json         ← 1800 registros formato Prisma
+data-analysis/features_kmeans.csv         ← 6 features normalizadas para K-Means
+data-analysis/graficos/                   ← 5 PNGs (EDA + validação)
+
+mobile/App.js                             ← NavigationContainer + AuthStack
+mobile/src/theme/colors.js + fonts.js     ← Paleta e tipografia
+mobile/src/components/Input.js            ← Input com SVG icon
+mobile/src/components/Button.js           ← Botão com loading
+mobile/src/assets/CadeadoIcon.js          ← SVG cadeado (react-native-svg)
+mobile/src/screens/LoginScreen.js         ← Tela Login mobile
+mobile/src/screens/RegisterScreen.js      ← Tela Cadastro mobile
+mobile/src/navigation/AuthStack.js        ← Stack Navigator
+
+web/src/index.css                         ← Reset + CSS variables
+web/src/App.css                           ← Layout split-screen
+web/src/App.jsx                           ← BrowserRouter + Routes
+web/src/components/Input.jsx + .css       ← Input web
+web/src/components/Button.jsx + .css      ← Button web
+web/src/assets/CadeadoIcon.jsx            ← SVG cadeado (JSX)
+web/src/assets/EmailIcon.jsx              ← SVG email (JSX)
+web/src/assets/cerebro.png               ← Imagem painel cadastro
+web/src/pages/LoginPage.jsx              ← Tela Login desktop
+web/src/pages/RegisterPage.jsx           ← Tela Cadastro desktop
+```
+
+---
+
+### Pendências conhecidas
+- Imagem das pedras zen (Login desktop): usar URL Unsplash por ora; substituir por arquivo local quando disponível
+- Schema Prisma ainda usa nomes em português (RegistroBemEstar, etc.) — manter assim, é a versão canônica
+- Discrepância entre schema Prisma do copilot-instructions (inglês) e o schema real do projeto (português) — o schema REAL está em backend/prisma/schema.prisma e usa português
 
 ---
 
