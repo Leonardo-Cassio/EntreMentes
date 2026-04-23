@@ -5,6 +5,7 @@ import Button from '../components/Button';
 import CadeadoIcon from '../assets/CadeadoIcon';
 import EmailIcon from '../assets/EmailIcon';
 import cerebroImg from '../assets/cerebro.png';
+import { api } from '../services/api';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -36,16 +37,10 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      const data = await response.json();
+      const data = await api.register(name, email, password);
 
       if (!data.success) {
-        setError(data.message);
+        setError(data.message || 'Erro ao criar conta.');
         return;
       }
 

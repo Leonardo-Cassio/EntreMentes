@@ -16,6 +16,8 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import CadeadoIcon from '../assets/CadeadoIcon';
 import { colors, fonts } from '../theme';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 
 function EmailIcon({ color, size }) {
   return (
@@ -24,6 +26,7 @@ function EmailIcon({ color, size }) {
 }
 
 export default function LoginScreen({ navigation }) {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,20 +39,14 @@ export default function LoginScreen({ navigation }) {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
+      const data = await api.login(email.trim(), password);
 
       if (!data.success) {
-        Alert.alert('Erro', data.message);
+        Alert.alert('Erro', data.message || 'Credenciais inválidas.');
         return;
       }
 
-      // TODO: salvar token e navegar para Dashboard
+      await login(data.data.token, data.data.user);
     } catch {
       Alert.alert('Erro', 'Não foi possível conectar ao servidor.');
     } finally {

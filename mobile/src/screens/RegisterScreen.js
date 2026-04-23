@@ -16,6 +16,7 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import CadeadoIcon from '../assets/CadeadoIcon';
 import { colors, fonts } from '../theme';
+import { api } from '../services/api';
 
 function EmailIcon({ color, size }) {
   return (
@@ -48,16 +49,10 @@ export default function RegisterScreen({ navigation }) {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      const data = await response.json();
+      const data = await api.register(name, email, password);
 
       if (!data.success) {
-        Alert.alert('Erro', data.message);
+        Alert.alert('Erro', data.message || 'Erro ao criar conta.');
         return;
       }
 

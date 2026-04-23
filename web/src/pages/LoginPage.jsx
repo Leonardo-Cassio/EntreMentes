@@ -4,10 +4,11 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import CadeadoIcon from '../assets/CadeadoIcon';
 import EmailIcon from '../assets/EmailIcon';
-// TODO: substituir pela imagem das pedras zen quando disponível
-// import pedrasImg from '../assets/pedras.png';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 
 export default function LoginPage() {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,21 +25,15 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
+      const data = await api.login(email, password);
 
       if (!data.success) {
         setError(data.message);
         return;
       }
 
-      // TODO: salvar token e redirecionar para dashboard
-      console.log('Login OK:', data);
+      login(data.data.token, data.data.user);
+      // RotaPublica no App.jsx redireciona automaticamente para /dashboard
     } catch {
       setError('Não foi possível conectar ao servidor.');
     } finally {
