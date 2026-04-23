@@ -106,68 +106,36 @@ retomar exatamente de onde o anterior parou.
 > - [ ] Pub/Sub consumer (mood-registered) e publisher (profile-classified)
 > - [ ] Endpoint GET /analytics/profile no backend
 > - [ ] Dashboard (Desktop-3 Figma) com gráficos Recharts
-> - [ ] Telas pós-login mobile (Dashboard, Registro Diário)
+> - [x] Tela Registro Diário mobile (RegistroDiarioScreen.js) ✅
+> - [ ] Telas pós-login mobile restantes (Histórico, Perfil, Humor)
 > - [ ] Testes unitários e de integração
 > - [ ] Deploy Railway (backend + PostgreSQL)
 
 ---
 
-### Arquivos criados/modificados nesta sessão
+### Arquivos criados/modificados nesta sessão (22/04/2026)
 ```
---- BACKEND ---
-backend/src/lib/prisma.js                  ← Prisma singleton
-backend/src/server.js                      ← CORS + rotas /mood /users /auth
-backend/src/middleware/authMiddleware.js   ← Bearer token + JWT_SECRET do .env
-backend/src/services/authService.js        ← register/login, sem expor senha
-backend/src/services/userService.js        ← getById, update, remove
-backend/src/services/moodService.js        ← CRUD RegistroBemEstar
-backend/src/controllers/authController.js  ← Formato { success, data, message }
-backend/src/controllers/userController.js  ← GET/PUT/DELETE /me
-backend/src/controllers/moodController.js  ← CRUD completo
-backend/src/routes/userRoutes.js           ← /me com auth
-backend/src/routes/moodRoutes.js           ← 5 endpoints
-backend/prisma/seed.js                     ← NOVO: seed com 10 usuários + 1800 registros
-backend/package.json                       ← ATUALIZADO: script "seed" adicionado
+--- MOBILE ---
+mobile/src/screens/LoginScreen.js         ← CORRIGIDO: fetch hardcoded → api.js + auth.login()
+mobile/src/screens/RegistroDiarioScreen.js← NOVO: tela completa (sliders, emojis, progresso)
+mobile/src/navigation/AppTabs.js          ← ATUALIZADO: aba "Diário" → RegistroDiarioScreen
+mobile/package.json                       ← ATUALIZADO: @react-native-community/slider adicionado
 
 --- DATA ANALYSIS ---
-data-analysis/preprocessing.py            ← Pré-processamento documentado
-data-analysis/dados_tratados.json         ← 1800 registros formato Prisma
-data-analysis/features_kmeans.csv         ← 6 features normalizadas para K-Means
-data-analysis/graficos/                   ← 5 PNGs (EDA + validação)
-
---- MOBILE ---
-mobile/App.js                             ← ATUALIZADO: AuthProvider + Navegacao dinâmica
-mobile/src/context/AuthContext.js         ← NOVO: AuthContext com AsyncStorage
-mobile/src/services/api.js               ← NOVO: API centralizada (auto-detecta IP)
-mobile/src/navigation/AuthStack.js        ← Stack Navigator (Login/Register)
-mobile/src/navigation/AppTabs.js          ← NOVO: Bottom tabs (5 abas)
-mobile/src/screens/LoginScreen.js         ← Tela Login mobile
-mobile/src/screens/RegisterScreen.js      ← ATUALIZADO: usa api.js
-mobile/src/screens/DashboardScreen.js     ← NOVO: Dashboard com gráficos SVG
-mobile/src/theme/colors.js + fonts.js     ← Paleta e tipografia
-mobile/src/components/Input.js            ← Input com SVG icon
-mobile/src/components/Button.js           ← Botão com loading
-
---- WEB ---
-web/src/App.jsx                           ← ATUALIZADO: AuthProvider + RotaProtegida/RotaPublica
-web/src/context/AuthContext.jsx           ← NOVO: AuthContext com localStorage
-web/src/services/api.js                  ← NOVO: API centralizada
-web/src/pages/LoginPage.jsx              ← ATUALIZADO: chama auth.login(), redireciona
-web/src/pages/RegisterPage.jsx           ← ATUALIZADO: usa api.js
-web/src/pages/DashboardPage.jsx          ← NOVO: Dashboard com Recharts
-web/src/pages/DashboardPage.css          ← NOVO: Estilos do Dashboard
-web/src/components/Input.jsx + .css       ← Input web
-web/src/components/Button.jsx + .css      ← Button web
-web/src/assets/CadeadoIcon.jsx            ← SVG cadeado (JSX)
-web/src/assets/EmailIcon.jsx              ← SVG email (JSX)
+data-analysis/kmeans_clustering.py        ← NOVO: K-Means K=4, validação, 4 gráficos, pkl
+data-analysis/modelo_kmeans.pkl           ← NOVO: modelo serializado (8.4 KB, joblib)
+data-analysis/graficos/06_elbow_silhouette.png ← NOVO
+data-analysis/graficos/07_clusters_pca.png     ← NOVO
+data-analysis/graficos/08_perfis_radar.png     ← NOVO
+data-analysis/graficos/09_distribuicao_clusters.png ← NOVO
 ```
 
 ### Pendências para próxima sessão
-- K-Means: rodar clustering no features_kmeans.csv e salvar modelo_kmeans.pkl (item 6 Sprint 2)
-- GCP: criar projeto, tópicos Pub/Sub e documentar (item 5 Sprint 2)
+- GCP: criar projeto, tópicos Pub/Sub (mood-registered, profile-classified), service account — feito manualmente no console GCP (item 5 Sprint 2)
+- Documentação: capturar prints das telas e dos gráficos de clustering como evidência (item 7 Sprint 2)
+- Commits do Leonardo em todos os módulos (item 4 Sprint 2)
 - Dashboard web/mobile: conectar aos dados reais do banco (hoje usa mock estático)
 - Registro Diário web/mobile: conectar handleSalvar() à API real (POST /mood)
-- Documentação: capturar prints de evidências para entrega
 
 ---
 
