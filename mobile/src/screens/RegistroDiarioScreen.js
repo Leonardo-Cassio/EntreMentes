@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
 
@@ -99,7 +100,7 @@ function CardSlider({ icone, titulo, subtitulo, valor, min, max, step, unidade, 
 
 // ── Componente principal ────────────────────────────────────────────────────
 export default function RegistroDiarioScreen({ navigation }) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   const iniciais = user?.name
     ? user.name.split(' ').slice(0, 2).map(p => p[0].toUpperCase()).join('')
@@ -128,10 +129,21 @@ export default function RegistroDiarioScreen({ navigation }) {
     if (!completo) return;
     setSalvando(true);
     try {
-      // TODO: substituir por api.createRegistro() quando integrar ao back
-      await new Promise(r => setTimeout(r, 800));
+      const res = await api.createRegistro(token, {
+        nivelHumor:          humor,
+        nota:                nota || undefined,
+        tempoTela:           tempoTela,
+        duracaoSono:         sono,
+        atividadeFisica:     atividade,
+        nivelEstresse:       estresse,
+        ansiedadeAntesProva: ansiedade,
+        desempenhoAcademico: desempenho,
+      });
+      if (!res.success) throw new Error(res.message || 'Erro ao salvar');
       setSucesso(true);
       setTimeout(() => navigation.navigate('Dashboard'), 1500);
+    } catch (err) {
+      Alert.alert('Erro', `Não foi possível salvar o registro: ${err.message}`);
     } finally {
       setSalvando(false);
     }

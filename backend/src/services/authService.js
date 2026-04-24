@@ -23,7 +23,7 @@ exports.login = async (email, password) => {
   if (!valid) throw new Error("Senha inválida");
 
   const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-    expiresIn: "1d"
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   });
 
   const { password: _, ...userWithoutPassword } = user;

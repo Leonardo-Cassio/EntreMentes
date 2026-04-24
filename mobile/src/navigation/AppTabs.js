@@ -6,6 +6,7 @@ import { colors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
 import DashboardScreen      from '../screens/DashboardScreen';
 import RegistroDiarioScreen from '../screens/RegistroDiarioScreen';
+import HistoricoScreen      from '../screens/HistoricoScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -18,9 +19,8 @@ function TelaPlaceholder({ nome }) {
   );
 }
 
-const HumorScreen    = () => <TelaPlaceholder nome="Humor" />;
-const HistoricoScreen = () => <TelaPlaceholder nome="Histórico" />;
-const PerfilScreen   = () => <TelaPlaceholder nome="Perfil" />;
+const HumorScreen  = () => <TelaPlaceholder nome="Humor" />;
+const PerfilScreen = () => <TelaPlaceholder nome="Perfil" />;
 
 const ICONS = {
   Dashboard: { focused: 'grid',                 default: 'grid-outline'                },

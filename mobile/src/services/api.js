@@ -12,10 +12,11 @@ const getBaseUrl = () => {
 
 const API_URL = getBaseUrl();
 
-async function request(path, options = {}) {
+async function request(path, { method = 'GET', headers = {}, body } = {}) {
   const res = await fetch(`${API_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
+    method,
+    headers: { 'Content-Type': 'application/json', ...headers },
+    body,
   });
   return res.json();
 }
@@ -35,6 +36,18 @@ export const api = {
 
   getMe: (token) =>
     request('/users/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  createRegistro: (token, data) =>
+    request('/mood', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    }),
+
+  listRegistros: (token) =>
+    request('/mood', {
       headers: { Authorization: `Bearer ${token}` },
     }),
 };

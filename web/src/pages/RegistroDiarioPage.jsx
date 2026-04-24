@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import './RegistroDiarioPage.css';
 
 // ── Constantes ────────────────────────────────────────────────────────────
@@ -47,6 +49,7 @@ const IcoDesemp = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="no
 // ── Componente principal ──────────────────────────────────────────────────
 export default function RegistroDiarioPage() {
   const navigate = useNavigate();
+  const { token } = useAuth();
 
   const [humor,      setHumor]      = useState(null);
   const [nota,       setNota]       = useState('');
@@ -72,10 +75,21 @@ export default function RegistroDiarioPage() {
     if (!completo) return;
     setSalvando(true);
     try {
-      // TODO: substituir pelo api.createRegistro() quando integrar ao back
-      await new Promise(r => setTimeout(r, 800));
+      const res = await api.createRegistro(token, {
+        nivelHumor:          humor,
+        nota:                nota || undefined,
+        tempoTela:           tempoTela,
+        duracaoSono:         sono,
+        atividadeFisica:     atividade,
+        nivelEstresse:       estresse,
+        ansiedadeAntesProva: ansiedade,
+        desempenhoAcademico: desempenho,
+      });
+      if (!res.success) throw new Error(res.message || 'Erro ao salvar');
       setSucesso(true);
       setTimeout(() => navigate('/dashboard'), 1500);
+    } catch (err) {
+      alert(`Não foi possível salvar o registro: ${err.message}`);
     } finally {
       setSalvando(false);
     }

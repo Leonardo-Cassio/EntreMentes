@@ -15,7 +15,7 @@ retomar exatamente de onde o anterior parou.
 
 ### Estado atual do desenvolvimento
 
-> **Última atualização:** 2026-04-22
+> **Última atualização:** 2026-04-24
 >
 > ---
 >
@@ -69,6 +69,7 @@ retomar exatamente de onde o anterior parou.
 > - [x] Bottom navigation mobile com 5 abas (Dashboard, Diário, Humor, Histórico, Perfil)
 > - [x] Login mobile corrigido: usa api.js + chama auth.login() → navega para AppTabs automaticamente
 > - [x] Tela Registro Diário mobile criada (RegistroDiarioScreen.js) — sliders, emojis, barra de progresso, validação
+> - [x] Registro Diário web e mobile: handleSalvar() integrado ao POST /mood (API real)
 >
 > **3. Banco de dados implementado e populado com dados de teste** ✅
 > - [x] Schema Prisma com todos os models
@@ -130,12 +131,30 @@ data-analysis/graficos/08_perfis_radar.png     ← NOVO
 data-analysis/graficos/09_distribuicao_clusters.png ← NOVO
 ```
 
+### Arquivos criados/modificados nesta sessão (24/04/2026)
+```
+--- BACKEND ---
+backend/src/services/authService.js       ← CORRIGIDO: expiresIn usa JWT_EXPIRES_IN do .env (era "1d" fixo)
+
+--- WEB ---
+web/src/services/api.js                   ← CORRIGIDO: função request() reestruturada — ...options sobrescrevia headers e perdia Content-Type; createRegistro + listRegistros adicionados
+web/src/pages/RegistroDiarioPage.jsx      ← ATUALIZADO: handleSalvar() integrado ao POST /mood
+web/src/pages/HistoricoPage.jsx           ← NOVO: lista registros do usuário (cards expansíveis)
+web/src/pages/HistoricoPage.css           ← NOVO: estilos da página de histórico
+web/src/App.jsx                           ← ATUALIZADO: rota /historico adicionada
+
+--- MOBILE ---
+mobile/src/services/api.js               ← CORRIGIDO: mesma correção do request() + createRegistro + listRegistros adicionados
+mobile/src/screens/RegistroDiarioScreen.js← ATUALIZADO: handleSalvar() integrado ao POST /mood
+mobile/src/screens/HistoricoScreen.js    ← NOVO: lista registros com cards expansíveis + FlatList
+mobile/src/navigation/AppTabs.js         ← ATUALIZADO: aba Histórico usa HistoricoScreen real
+```
+
 ### Pendências para próxima sessão
-- GCP: criar projeto, tópicos Pub/Sub (mood-registered, profile-classified), service account — feito manualmente no console GCP (item 5 Sprint 2)
+- GCP: criar projeto, tópicos Pub/Sub (mood-registered, profile-classified), service account (item 5 Sprint 2)
 - Documentação: capturar prints das telas e dos gráficos de clustering como evidência (item 7 Sprint 2)
 - Commits do Leonardo em todos os módulos (item 4 Sprint 2)
 - Dashboard web/mobile: conectar aos dados reais do banco (hoje usa mock estático)
-- Registro Diário web/mobile: conectar handleSalvar() à API real (POST /mood)
 
 ---
 
@@ -143,6 +162,7 @@ data-analysis/graficos/09_distribuicao_clusters.png ← NOVO
 - Imagem das pedras zen (Login desktop): usar URL Unsplash por ora; substituir por arquivo local quando disponível
 - Schema Prisma ainda usa nomes em português (RegistroBemEstar, etc.) — manter assim, é a versão canônica
 - Discrepância entre schema Prisma do copilot-instructions (inglês) e o schema real do projeto (português) — o schema REAL está em backend/prisma/schema.prisma e usa português
+- Bug corrigido (24/04): função request() em api.js (web e mobile) usava ...options que sobrescrevia o Content-Type — Express não parseava o body e todos os campos chegavam undefined no backend
 
 ---
 
