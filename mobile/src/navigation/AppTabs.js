@@ -1,7 +1,8 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useAuth } from '../context/AuthContext';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
 import DashboardScreen      from '../screens/DashboardScreen';
@@ -19,8 +20,25 @@ function TelaPlaceholder({ nome }) {
   );
 }
 
-const HumorScreen  = () => <TelaPlaceholder nome="Humor" />;
-const PerfilScreen = () => <TelaPlaceholder nome="Perfil" />;
+const HumorScreen = () => <TelaPlaceholder nome="Humor" />;
+
+function PerfilScreen() {
+  const { user, logout } = useAuth();
+  return (
+    <View style={s.placeholder}>
+      <View style={s.perfilAvatar}>
+        <Text style={s.perfilIniciais}>
+          {user?.name ? user.name.split(' ').slice(0, 2).map(p => p[0].toUpperCase()).join('') : 'US'}
+        </Text>
+      </View>
+      <Text style={s.perfilNome}>{user?.name ?? 'Usuário'}</Text>
+      <Text style={s.perfilEmail}>{user?.email ?? ''}</Text>
+      <TouchableOpacity style={s.sairBtn} onPress={logout} activeOpacity={0.8}>
+        <Text style={s.sairTexto}>Sair da conta</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 const ICONS = {
   Dashboard: { focused: 'grid',                 default: 'grid-outline'                },
@@ -81,5 +99,42 @@ const s = StyleSheet.create({
   placeholderSub: {
     fontSize: fonts.sizes.sm,
     color: colors.textSecondary,
+  },
+
+  perfilAvatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  perfilIniciais: {
+    fontSize: 28,
+    fontWeight: fonts.weights.bold,
+    color: colors.white,
+  },
+  perfilNome: {
+    fontSize: fonts.sizes.lg,
+    fontWeight: fonts.weights.bold,
+    color: colors.text,
+  },
+  perfilEmail: {
+    fontSize: fonts.sizes.sm,
+    color: colors.textSecondary,
+    marginTop: 4,
+    marginBottom: 32,
+  },
+  sairBtn: {
+    backgroundColor: '#FFF0EE',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+  },
+  sairTexto: {
+    fontSize: fonts.sizes.md,
+    fontWeight: fonts.weights.bold,
+    color: '#E17055',
   },
 });

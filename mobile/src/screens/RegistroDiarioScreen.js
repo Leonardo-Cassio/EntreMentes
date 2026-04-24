@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   TextInput, StyleSheet, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -116,6 +117,21 @@ export default function RegistroDiarioScreen({ navigation }) {
   const [desempenho, setDesempenho] = useState(null);
   const [salvando,   setSalvando]   = useState(false);
   const [sucesso,    setSucesso]    = useState(false);
+
+  // Reseta o formulário toda vez que a aba for focada
+  useFocusEffect(
+    useCallback(() => {
+      setHumor(null);
+      setNota('');
+      setTempoTela(7);
+      setSono(6);
+      setAtividade(2);
+      setEstresse(null);
+      setAnsiedade(null);
+      setDesempenho(null);
+      setSucesso(false);
+    }, [])
+  );
 
   const preenchidos = 3
     + (humor      !== null ? 1 : 0)
