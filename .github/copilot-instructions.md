@@ -150,7 +150,8 @@ web/src/App.jsx                           ← ATUALIZADO: rota /historico adicio
 mobile/src/services/api.js               ← CORRIGIDO: mesma correção do request() + createRegistro + listRegistros adicionados
 mobile/src/screens/RegistroDiarioScreen.js← ATUALIZADO: handleSalvar() integrado ao POST /mood
 mobile/src/screens/HistoricoScreen.js    ← NOVO: lista registros com cards expansíveis + FlatList
-mobile/src/navigation/AppTabs.js         ← ATUALIZADO: aba Histórico usa HistoricoScreen real
+mobile/src/navigation/AppTabs.js         ← ATUALIZADO: aba Histórico usa HistoricoScreen real; aba Perfil ganhou nome, email e botão "Sair da conta"
+mobile/src/screens/RegistroDiarioScreen.js← CORRIGIDO: useFocusEffect reseta o formulário ao focar a aba — tela de sucesso não ficava mais presa após salvar
 ```
 
 ### Arquivos criados/modificados nesta sessão (24/04/2026 — tarde)
@@ -176,6 +177,7 @@ mobile/src/services/api.js               ← ATUALIZADO: timeout de 8s no fetch 
 - Schema Prisma ainda usa nomes em português (RegistroBemEstar, etc.) — manter assim, é a versão canônica
 - Discrepância entre schema Prisma do copilot-instructions (inglês) e o schema real do projeto (português) — o schema REAL está em backend/prisma/schema.prisma e usa português
 - Bug corrigido (24/04): função request() em api.js (web e mobile) usava ...options que sobrescrevia o Content-Type — Express não parseava o body e todos os campos chegavam undefined no backend
+- Bug corrigido (24/04): RegistroDiarioScreen mobile — tela de sucesso ficava presa pois Bottom Tabs não desmontam o componente ao trocar de aba; resolvido com useFocusEffect resetando todo o estado ao focar
 
 ---
 
