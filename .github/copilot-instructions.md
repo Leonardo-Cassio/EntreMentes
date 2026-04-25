@@ -78,8 +78,9 @@ retomar exatamente de onde o anterior parou.
 > - [x] Migrations aplicadas via `prisma db push` (migrations antigas estavam desatualizadas)
 > - [x] Seed executado com sucesso: 10 usuários + 1800 registros no banco
 >
-> **4. Commits ativos de todos os integrantes no GitHub**
-> - [ ] Garantir commits de ambos os integrantes em todos os módulos
+> **4. Commits ativos de todos os integrantes no GitHub** ✅
+> - [x] Gabriel: commits em mobile, web, data-analysis, backend, docs
+> - [x] Leonardo: commit em mobile (HistoricoScreen), web (HistoricoPage), backend (authService fix), api.js (web e mobile)
 >
 > **5. Computação em Nuvem II: ambiente em nuvem criado**
 > - [ ] Criar projeto no Google Cloud Platform (GCP)
@@ -108,7 +109,9 @@ retomar exatamente de onde o anterior parou.
 > - [ ] Endpoint GET /analytics/profile no backend
 > - [ ] Dashboard (Desktop-3 Figma) com gráficos Recharts
 > - [x] Tela Registro Diário mobile (RegistroDiarioScreen.js) ✅
-> - [ ] Telas pós-login mobile restantes (Histórico, Perfil, Humor)
+> - [x] Tela Histórico mobile (HistoricoScreen.js) — cards expansíveis + FlatList ✅
+ - [x] Tela Histórico web (HistoricoPage.jsx) — cards expansíveis ✅
+ - [ ] Telas pós-login mobile restantes (Perfil, Humor)
 > - [ ] Testes unitários e de integração
 > - [ ] Deploy Railway (backend + PostgreSQL)
 
@@ -150,11 +153,21 @@ mobile/src/screens/HistoricoScreen.js    ← NOVO: lista registros com cards exp
 mobile/src/navigation/AppTabs.js         ← ATUALIZADO: aba Histórico usa HistoricoScreen real
 ```
 
+### Arquivos criados/modificados nesta sessão (24/04/2026 — tarde)
+```
+--- DOCUMENTAÇÃO ---
+Documentação/EntreMentes_Sprint2_Doc.md   ← NOVO: documentação Sprint 2 completa (Notion-ready)
+
+--- MOBILE ---
+mobile/app.json                           ← ATUALIZADO: NSAppTransportSecurity adicionado (iOS HTTP)
+mobile/src/services/api.js               ← ATUALIZADO: timeout de 8s no fetch + fallback IP fixo para tunnel
+```
+
 ### Pendências para próxima sessão
 - GCP: criar projeto, tópicos Pub/Sub (mood-registered, profile-classified), service account (item 5 Sprint 2)
 - Documentação: capturar prints das telas e dos gráficos de clustering como evidência (item 7 Sprint 2)
-- Commits do Leonardo em todos os módulos (item 4 Sprint 2)
 - Dashboard web/mobile: conectar aos dados reais do banco (hoje usa mock estático)
+- Telas mobile restantes: Perfil, Humor
 
 ---
 
