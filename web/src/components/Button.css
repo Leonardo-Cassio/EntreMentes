@@ -34,6 +34,16 @@
   background: rgba(108, 92, 231, 0.05);
 }
 
+.btn-dark {
+  background: #1a1a1a;
+  color: var(--white);
+  border-radius: 99px;
+}
+
+.btn-dark:hover:not(:disabled) {
+  background: #333;
+}
+
 .btn-spinner {
   display: inline-block;
   width: 20px;

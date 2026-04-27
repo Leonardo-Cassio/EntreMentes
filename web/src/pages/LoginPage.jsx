@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Input from '../components/Input';
 import Button from '../components/Button';
@@ -13,6 +13,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const HEADING = 'Olá!';
+  const [heading, setHeading] = useState('');
+  const [typingDone, setTypingDone] = useState(false);
+
+  useEffect(() => {
+    let i = 0;
+    const ms = 2000 / HEADING.length;
+    const id = setInterval(() => {
+      i++;
+      setHeading(HEADING.slice(0, i));
+      if (i >= HEADING.length) { clearInterval(id); setTypingDone(true); }
+    }, ms);
+    return () => clearInterval(id);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,7 +48,6 @@ export default function LoginPage() {
       }
 
       login(data.data.token, data.data.user);
-      // RotaPublica no App.jsx redireciona automaticamente para /dashboard
     } catch {
       setError('Não foi possível conectar ao servidor.');
     } finally {
@@ -43,21 +57,20 @@ export default function LoginPage() {
 
   return (
     <div className="auth-layout">
-      <div className="auth-brand">
-        <h1>EntreMentes</h1>
-        <p>Cuide da sua mente, um dia de cada vez</p>
-        {/* TODO: trocar src por pedrasImg quando disponível */}
-        <img
-          src="https://images.unsplash.com/photo-1525857597365-5f6dbff2e36e?w=500&h=500&fit=crop"
-          alt="Pedras zen empilhadas"
-          className="auth-brand-image"
-        />
-      </div>
 
+      {/* ── Lado esquerdo: formulário ─────────────────────── */}
       <div className="auth-form-side">
+        <div className="auth-logo">
+          <div className="auth-logo-icon">E</div>
+          <span className="auth-logo-name">EntreMentes</span>
+        </div>
+
         <div className="auth-form-container">
-          <h2>Bem vindo de volta</h2>
-          <p className="subtitle">Entre na sua conta para continuar</p>
+          <h2 className="auth-heading">
+            {heading}
+            {!typingDone && <span className="auth-cursor">|</span>}
+          </h2>
+          <p className="subtitle">Bem-vindo de volta à comunidade</p>
 
           {error && <div className="error-message">{error}</div>}
 
@@ -65,7 +78,7 @@ export default function LoginPage() {
             <Input
               label="E-mail"
               type="email"
-              placeholder="Digite seu E-mail"
+              placeholder="seu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               icon={EmailIcon}
@@ -74,22 +87,44 @@ export default function LoginPage() {
             <Input
               label="Senha"
               type="password"
-              placeholder="Digite sua Senha"
+              placeholder="Digite sua senha"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               icon={CadeadoIcon}
             />
 
-            <Button title="Entrar" type="submit" loading={loading} />
+            <div className="auth-forgot-row">
+              <Link to="#">Esqueceu a senha?</Link>
+            </div>
+
+            <Button title="Entrar" type="submit" loading={loading} variant="dark" />
           </form>
 
           <p className="auth-footer">
-            Não tem uma conta? <Link to="/register">Cadastre-se</Link>
+            Não tem uma conta?{' '}
+            <Link to="/register">Cadastre-se</Link>
           </p>
-
-          <p className="auth-copyright">EntreMentes © 2026</p>
         </div>
       </div>
+
+      {/* ── Lado direito: gradiente com frase ────────────── */}
+      <div className="auth-brand">
+        <div className="auth-brand-nav">
+          <Link to="/register" className="auth-brand-link">Cadastrar</Link>
+          <Link to="/register" className="auth-brand-btn">Entrar</Link>
+        </div>
+
+        <div className="auth-brand-content">
+          <h3 className="auth-brand-heading">
+            Cuide da sua mente,<br />um dia de cada vez.
+          </h3>
+          <p className="auth-brand-sub">
+            Registre seus humores, monitore seu bem-estar
+            e descubra padrões sobre você mesmo.
+          </p>
+        </div>
+      </div>
+
     </div>
   );
 }

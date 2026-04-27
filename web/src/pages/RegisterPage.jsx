@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import CadeadoIcon from '../assets/CadeadoIcon';
 import EmailIcon from '../assets/EmailIcon';
-import cerebroImg from '../assets/cerebro.png';
 import { api } from '../services/api';
 
 export default function RegisterPage() {
@@ -15,6 +14,21 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const HEADING = 'Seja bem-vindo!';
+  const [heading, setHeading] = useState('');
+  const [typingDone, setTypingDone] = useState(false);
+
+  useEffect(() => {
+    let i = 0;
+    const ms = 3000 / HEADING.length;
+    const id = setInterval(() => {
+      i++;
+      setHeading(HEADING.slice(0, i));
+      if (i >= HEADING.length) { clearInterval(id); setTypingDone(true); }
+    }, ms);
+    return () => clearInterval(id);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,28 +67,46 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="auth-layout">
+    <div className="auth-layout auth-layout--reversed">
+
+      {/* ── Lado esquerdo: gradiente ──────────────────────── */}
       <div className="auth-brand">
-        <h1>EntreMentes</h1>
-        <p>Comece a entender seus padrões emocionais</p>
-        <img
-          src={cerebroImg}
-          alt="Ilustração cérebro humano"
-          className="auth-brand-image"
-        />
+        <div className="auth-brand-nav">
+          <Link to="/login" className="auth-brand-link">Entrar</Link>
+          <Link to="/login" className="auth-brand-btn">Login</Link>
+        </div>
+
+        <div className="auth-brand-content">
+          <h3 className="auth-brand-heading">
+            Comece sua jornada<br />de bem-estar.
+          </h3>
+          <p className="auth-brand-sub">
+            Monitore seu humor, sono e desempenho
+            acadêmico e descubra padrões sobre você mesmo.
+          </p>
+        </div>
       </div>
 
+      {/* ── Lado direito: formulário ──────────────────────── */}
       <div className="auth-form-side">
+        <div className="auth-logo">
+          <div className="auth-logo-icon">E</div>
+          <span className="auth-logo-name">EntreMentes</span>
+        </div>
+
         <div className="auth-form-container">
-          <h2>Seja bem vindo!</h2>
-          <p className="subtitle">Crie sua conta para continuar</p>
+          <h2 className="auth-heading">
+            {heading}
+            {!typingDone && <span className="auth-cursor">|</span>}
+          </h2>
+          <p className="subtitle">Crie sua conta para começar</p>
 
           {error && <div className="error-message">{error}</div>}
 
           <form className="auth-form" onSubmit={handleSubmit}>
             <Input
               label="Nome"
-              placeholder="Digite seu Nome"
+              placeholder="Seu nome completo"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -82,7 +114,7 @@ export default function RegisterPage() {
             <Input
               label="E-mail"
               type="email"
-              placeholder="Digite seu E-mail"
+              placeholder="seu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               icon={EmailIcon}
@@ -91,7 +123,7 @@ export default function RegisterPage() {
             <Input
               label="Senha"
               type="password"
-              placeholder="Digite sua Senha"
+              placeholder="Mínimo 6 caracteres"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               icon={CadeadoIcon}
@@ -100,20 +132,22 @@ export default function RegisterPage() {
             <Input
               label="Confirme sua senha"
               type="password"
-              placeholder="Digite sua Senha"
+              placeholder="Repita a senha"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               icon={CadeadoIcon}
             />
 
-            <Button title="Cadastrar" type="submit" loading={loading} />
+            <Button title="Cadastrar" type="submit" loading={loading} variant="dark" />
           </form>
 
           <p className="auth-footer">
-            Já tem uma conta? <Link to="/login">Faça login</Link>
+            Já tem uma conta?{' '}
+            <Link to="/login">Faça login</Link>
           </p>
         </div>
       </div>
+
     </div>
   );
 }

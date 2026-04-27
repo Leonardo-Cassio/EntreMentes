@@ -164,6 +164,27 @@ mobile/app.json                           ← ATUALIZADO: NSAppTransportSecurity
 mobile/src/services/api.js               ← ATUALIZADO: timeout de 8s no fetch + fallback IP fixo para tunnel
 ```
 
+### Arquivos criados/modificados nesta sessão (24/04/2026 — noite)
+```
+--- WEB ---
+web/src/pages/LoginPage.jsx              ← REDESENHADO: layout split-screen (form esquerda / gradiente direita)
+                                            typewriter "Olá!" em 2s, cursor piscando, botão dark pill
+web/src/pages/RegisterPage.jsx           ← REDESENHADO: layout espelhado (gradiente esquerda / form direita)
+                                            typewriter "Seja bem-vindo!" em 3s, mesma animação
+web/src/App.css                          ← ATUALIZADO: estilos auth completamente reescritos
+                                            auth-layout, auth-form-side, auth-brand, auth-cursor,
+                                            animações de entrada authSlideIn / authSlideInReversed
+web/src/components/Button.css            ← ATUALIZADO: variante .btn-dark adicionada (preto, pill shape)
+
+--- MOBILE ---
+mobile/src/screens/LoginScreen.js        ← REDESENHADO: fundo LinearGradient, card branco centralizado,
+                                            typewriter "Olá!" em 2s, cursor Animated, card slide-up ao montar
+mobile/src/screens/RegisterScreen.js     ← REDESENHADO: mesmo estilo do Login,
+                                            typewriter "Seja bem-vindo!" em 3s, 4 campos, validações mantidas
+mobile/App.js                            ← ATUALIZADO: animação fade+scale na troca AuthStack ↔ AppTabs
+                                            (transição login→dashboard e logout→login)
+```
+
 ### Pendências para próxima sessão
 - GCP: criar projeto, tópicos Pub/Sub (mood-registered, profile-classified), service account (item 5 Sprint 2)
 - Documentação: capturar prints das telas e dos gráficos de clustering como evidência (item 7 Sprint 2)
