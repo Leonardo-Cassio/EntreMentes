@@ -1,42 +1,38 @@
-# EntreMentes 🧠📊
+# EntreMentes 🧠
 
-O **EntreMentes** é uma plataforma digital inovadora voltada ao registro e análise de humor de estudantes universitários. Permite que os alunos registrem seu estado emocional diariamente (sono, tempo de tela, exercícios, estresse e humor) e utiliza técnicas de mineração de dados — especificamente o algoritmo não-supervisionado K-Means (K=4) — para identificar padrões e enquadrar o discente em um de quatro perfis comportamentais.
+O **EntreMentes** é uma plataforma digital voltada ao registro e análise de humor de estudantes universitários. Permite que os alunos registrem seu estado emocional diariamente (sono, tempo de tela, exercícios, estresse e humor) e utiliza técnicas de mineração de dados — especificamente o algoritmo não-supervisionado K-Means (K=4) — para identificar padrões e enquadrar o discente em um de quatro perfis comportamentais.
 
-Este projeto é fruto do **Projeto Interdisciplinar (PI) do 6º semestre** do curso de Desenvolvimento de Software Multiplataforma (DSM) da **FATEC**.
-
----
-
-## 🏗 Arquitetura do Sistema
-
-A solução é distribuída em microserviços e interfaces multiplataforma:
-
-- **Mobile:** React Native (Expo) — App para iOS e Android destinado aos registros do estudante.
-- **Web:** React.js (Recharts) — Dashboard Administrativo/Visualização detalhada.
-- **Backend (API):** Node.js, Express e PostgreSQL (Prisma ORM) — Responsável pelas conexões, banco de dados, auth e regras de negócio.
-- **Mining Service:** Python (Flask, scikit-learn, pandas) — Serviço de Inteligência Artificial que consome dados, treina o K-Means e devolve o agrupamento dos usuários.
-- **Mensageria (Event-driven):** Google Cloud Pub/Sub — Responsável por desacoplar o backend (Node.js) do serviço de mineração de dados (Python), realizando processamento assíncrono.
+Projeto Interdisciplinar (PI) do **6º semestre** do curso de Desenvolvimento de Software Multiplataforma (DSM) — **FATEC**.
 
 ---
 
-## 📡 Mensageria e Fluxo de IA (Google Cloud Pub/Sub)
+## Arquitetura do Sistema
 
-Para garantir que a API principal continue rápida e não aguarde o processamento custoso de inteligência artificial na requisição HTTP, utilizamos uma arquitetura orientada a eventos. 
+```
+mobile/          → React Native + Expo (Android e iOS)
+web/             → React.js + Vite + Recharts (dashboard web)
+backend/         → Node.js + Express + Prisma (API REST)
+mining-service/  → Python 3.11 + Flask + scikit-learn
+```
+
+Todos os serviços se comunicam via HTTP/REST. A classificação de perfil comportamental é processada de forma assíncrona via **Google Cloud Pub/Sub**.
+
+---
+
+## Fluxo de Mensageria (Google Cloud Pub/Sub)
 
 ![Fluxo do Sistema](./Documentação/Fluxo-do-Sistema.png)
 
-O fluxo funciona da seguinte maneira:
-1. **O usuário envia o registro de humor:** App Mobile `POST /mood`. O Node.js salva no banco e **publica um evento** no tópico `mood-registered`.
-2. **Mineração de Dados Asíncrona:** O Mining Service assina (`subscriber`) esse tópico, recebe os dados, roda o algoritmo **K-Means** e define o cluster do aluno.
-3. **Classificação Devolvida:** O Python **publica o resultado** no tópico `profile-classified`.
-4. **Atualização no Banco:** O Node.js (que assina esse segundo tópico) intercepta o resultado e atualiza a tabela `BehavioralProfile` silenciosamente. 
+1. O usuário envia o registro de humor → `POST /mood`. O backend salva no banco e **publica** no tópico `mood-registered`.
+2. O Mining Service (Python) **assina** esse tópico, recebe os dados e roda o K-Means.
+3. O resultado é **publicado** no tópico `profile-classified`.
+4. O backend **assina** esse tópico e atualiza a tabela `BehavioralProfile` silenciosamente.
 
-Quando o usuário checar seu perfil pelo App ou Web, os dados já estarão processados e salvos.
+Quando o usuário consultar seu perfil, os dados já estarão processados.
 
 ---
 
-## 🗄️ Modelagem de Dados e Documentação
-
-O projeto conta com uma diagramação de banco de dados pensada para suportar tanto os atributos comportamentais quanto a associação de clusters do modelo não supervisionado.
+## Modelagem de Dados
 
 ### Modelo Conceitual
 ![Modelo Conceitual](./Documentação/BD%20-%20Conceitual.jpeg)
@@ -44,98 +40,155 @@ O projeto conta com uma diagramação de banco de dados pensada para suportar ta
 ### Modelo Lógico
 ![Modelo Lógico](./Documentação/BD%20-%20Logico.jpeg)
 
-*(Acesse também a [Documentação em PDF](./Documentação/EntreMentes%20Documentação.pdf) na pasta correspondente).*
+---
+
+## Tecnologias
+
+| Camada       | Tecnologia                                                              |
+|--------------|-------------------------------------------------------------------------|
+| Mobile       | React Native 0.81, Expo SDK 54                                          |
+| Web          | React 18, Vite, Recharts 2                                              |
+| Backend      | Node.js v24, Express 4, Prisma 5, PostgreSQL 16                         |
+| Auth         | JWT (jsonwebtoken), bcrypt                                              |
+| Mineração    | Python 3.11, Flask 3, scikit-learn 1.4, pandas 2, numpy 1.26            |
+| Mensageria   | Google Cloud Pub/Sub                                                    |
+| Docs API     | swagger-jsdoc + swagger-ui-express                                      |
 
 ---
 
-## 🛠 Tecnologias Utilizadas
+## Telas implementadas
 
-### Backend
-- **Node.js (v24 LTS)** & **Express 4**
-- **Prisma ORM (v5)** para integração e migrações.
-- **PostgreSQL 16** (Deploy no Railway / Local via Docker).
-- **JWT (jsonwebtoken)** & **bcrypt** (Autenticação).
-- **Google Cloud Pub/Sub** (`@google-cloud/pubsub` para mensageria assíncrona).
-- **Swagger** (Documentação da API via swagger-jsdoc).
+### Mobile (React Native)
+| Tela               | Status | Descrição                                                                 |
+|--------------------|--------|---------------------------------------------------------------------------|
+| Login              | ✅     | Fundo com gradiente, card branco centralizado, typewriter "Olá!" em 2s   |
+| Cadastro           | ✅     | Mesmo estilo do login, typewriter "Seja bem-vindo!" em 3s                |
+| Dashboard          | ✅     | Seletor de humor com modal de confirmação → redireciona para Diário       |
+| Registro Diário    | ✅     | Sliders, seleções, barra de progresso, integrado ao `POST /mood`          |
+| Histórico          | ✅     | FlatList com cards expansíveis, integrado ao `GET /mood`                  |
+| Perfil             | ✅     | Nome, e-mail e botão de logout                                            |
+| Humor              | 🔜     | Placeholder — Sprint 3                                                    |
 
-### Data Mining (Inteligência Artificial)
-- **Python 3.11** 
-- **Flask 3**
-- **Google Cloud Pub/Sub** (`google-cloud-pubsub` para assinar eventos e retornar classificação).
-- **scikit-learn 1.4**, **pandas 2**, **numpy 1.26** (Mineração, escalonamento e agrupamento).
-
-### Frontend (Mobile e Web)
-- **React Native 0.74** / **Expo SDK 51** (Mobile)
-- **React 18** e **Recharts 2** (Web)
-
----
-
-## 📊 Perfis Comportamentais (K-Means)
-
-A Inteligência Artificial divide os estudantes em quatro clusters principais baseados nos dados fornecidos:
-
-| Cluster | Perfil         | Nível de Risco | Resumo das Características                        |
-|---------|----------------|----------------|---------------------------------------------------|
-| `0`     | **Equilibrado**| Baixo          | Sono regular (~7.5h), exercícios, estresse baixo. |
-| `1`     | **Moderado**   | Moderado       | Sono adequado (~6h), níveis médios de pressão.    |
-| `2`     | **Sob Pressão**| Moderado-Alto  | Sono curto (~5h), muito tempo de tela (~9h).      |
-| `3`     | **Em Alerta**  | Alto           | Sem repouso (~4.5h), exausto, queda em desempenho.|
-
-*(Aviso: O projeto foca na identificação de padrões estatísticos e **não tem** validade diagnóstica psicológica ou médica).*
+### Web (React)
+| Tela               | Status | Descrição                                                                 |
+|--------------------|--------|---------------------------------------------------------------------------|
+| Login              | ✅     | Split-screen: form esquerda / gradiente direita, typewriter em 2s         |
+| Cadastro           | ✅     | Split-screen espelhado: gradiente esquerda / form direita, typewriter 3s  |
+| Dashboard          | ✅     | Métricas, gráficos Recharts, modal de humor → redireciona para Diário     |
+| Registro Diário    | ✅     | Sliders HTML, seleções, barra de progresso, integrado ao `POST /mood`     |
+| Histórico          | ✅     | Cards expansíveis integrados ao `GET /mood`                               |
 
 ---
 
-## 🚀 Como Executar o Projeto Localmente
+## Perfis Comportamentais (K-Means, K=4)
+
+| Cluster | Perfil          | Risco         | Características                                   |
+|---------|-----------------|---------------|---------------------------------------------------|
+| 0       | Equilibrado     | Baixo         | Sono ~7.5h, exercício regular, estresse baixo     |
+| 1       | Moderado        | Moderado      | Sono ~6h, níveis médios de pressão                |
+| 2       | Sob Pressão     | Moderado-Alto | Sono ~5h, tempo de tela ~9h, sem exercício        |
+| 3       | Em Alerta       | Alto          | Sono ~4.5h, tela ~10h, queda no desempenho        |
+
+> Este projeto foca na identificação de padrões estatísticos e **não possui** validade diagnóstica psicológica ou médica.
+
+---
+
+## Como Executar Localmente
 
 ### Pré-requisitos
-- Node.js (v24+) e npm
-- Python (v3.11+) e pip
-- Docker e Docker Compose (para o PostgreSQL)
+- Node.js v24+
+- Python 3.11+
+- Docker e Docker Compose
 
-### 1. Iniciar o Banco de Dados
-Na raiz do projeto (onde está o `docker-compose.yml`), execute:
+### 1. Banco de dados
 ```bash
 docker-compose up -d
 ```
 
-### 2. Configurar o Backend
-Acesse a pasta `backend`, instale as dependências e rode a API principal:
+### 2. Backend
 ```bash
 cd backend
 npm install
+# Criar .env com DATABASE_URL, JWT_SECRET, JWT_EXPIRES_IN, GCP_PROJECT_ID
+npx prisma db push
+node prisma/seed.js   # opcional — popula com dados de teste
+npm run dev           # http://localhost:3000
 ```
 
-Crie um arquivo `.env` na pasta `backend` seguindo os padrões das suas configurações locais (ex: `DATABASE_URL`, `JWT_SECRET`, `MINING_SERVICE_URL`).
-
-Em seguida, crie a estrutura no banco de dados e inicie o servidor:
+### 3. Web
 ```bash
-npx prisma migrate dev
-npm run dev
+cd web
+npm install
+npm run dev           # http://localhost:5173
 ```
 
-### 3. Configurar o Mining Service (Python)
-Abra outro terminal e acesse a pasta `mining-service` (que será criada conforme o andamento do projeto).
+### 4. Mobile
+```bash
+cd mobile
+npm install
+npx expo start        # escaneie o QR com Expo Go
+```
+
+### 5. Mining Service
 ```bash
 cd mining-service
 pip install -r requirements.txt
 flask run --port=5000
 ```
 
-### 4. Interfaces
-Futuramente, conforme as pastas `mobile/` e `web/` ganharem vida, o processo utilizará o `npm start` padrão do React/Expo em cada diretório.
+---
+
+## Endpoints da API
+
+Base URL: `http://localhost:3000`
+
+| Método | Rota                    | Auth | Descrição                        |
+|--------|-------------------------|------|----------------------------------|
+| POST   | /auth/register          | —    | Criar conta                      |
+| POST   | /auth/login             | —    | Login, retorna JWT               |
+| GET    | /users/me               | JWT  | Dados do usuário autenticado     |
+| PUT    | /users/me               | JWT  | Atualizar perfil                 |
+| POST   | /mood                   | JWT  | Criar registro de humor          |
+| GET    | /mood                   | JWT  | Listar registros do usuário      |
+| GET    | /mood/:id               | JWT  | Buscar registro por ID           |
+| PUT    | /mood/:id               | JWT  | Atualizar registro               |
+| GET    | /analytics/profile      | JWT  | Retorna perfil comportamental    |
 
 ---
 
-## 📚 Endpoints Básicos (Backend API)
-A API Node roda em `http://localhost:3000/api`
+## Variáveis de Ambiente
 
-- **Auth:** `POST /auth/register`, `POST /auth/login`
-- **Users:** `GET /users/me`, `PUT /users/me`
-- **Mood Tracking:** `POST /mood` (Registrar humor do dia)
-- **Analytics:** `GET /analytics/profile`, `POST /analytics/classify` (Dispara requisição ao Flask)
+### backend/.env
+```
+PORT=3000
+NODE_ENV=development
+DATABASE_URL="postgresql://postgres:postgres123@localhost:5432/entrementes"
+JWT_SECRET=sua_chave_secreta
+JWT_EXPIRES_IN=7d
+GCP_PROJECT_ID=entrementes-pi
+GOOGLE_APPLICATION_CREDENTIALS=./gcp-credentials.json
+```
+
+### mining-service/.env
+```
+FLASK_PORT=5000
+GCP_PROJECT_ID=entrementes-pi
+GOOGLE_APPLICATION_CREDENTIALS=./gcp-credentials.json
+GCP_SUBSCRIPTION_ID=mining-worker
+GCP_TOPIC_RESULT=profile-classified
+```
 
 ---
 
-## 👥 Equipe
-Desenvolvido por 2 integrantes em um prazo estimado de ~3 meses (março a junho de 2026).
-- Sprints divididas entre banco de dados/backend, integração de IA, interfaces e testes unitários.
+## Equipe
+
+Desenvolvido por 2 integrantes — março a junho de 2026.
+
+- **Gabriel** — mobile, web, backend, data-analysis, documentação
+- **Leonardo** — mobile, web, backend, api.js
+
+---
+
+## Figma
+
+[Acessar protótipo](https://www.figma.com/design/t3bPkPFGW4uXckBCziasEx/EntreMentes?node-id=0-1&p=f&t=cpJM06Qzt1sGj8P5-0)

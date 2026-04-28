@@ -100,7 +100,7 @@ function CardSlider({ icone, titulo, subtitulo, valor, min, max, step, unidade, 
 }
 
 // ── Componente principal ────────────────────────────────────────────────────
-export default function RegistroDiarioScreen({ navigation }) {
+export default function RegistroDiarioScreen({ navigation, route }) {
   const { user, token } = useAuth();
 
   const iniciais = user?.name
@@ -118,10 +118,12 @@ export default function RegistroDiarioScreen({ navigation }) {
   const [salvando,   setSalvando]   = useState(false);
   const [sucesso,    setSucesso]    = useState(false);
 
-  // Reseta o formulário toda vez que a aba for focada
+  // Reseta o formulário toda vez que a aba for focada.
+  // Se vier nivelHumorInicial via parâmetro (do Dashboard), pré-preenche o humor.
   useFocusEffect(
     useCallback(() => {
-      setHumor(null);
+      const humorInicial = route.params?.nivelHumorInicial ?? null;
+      setHumor(humorInicial);
       setNota('');
       setTempoTela(7);
       setSono(6);
@@ -130,7 +132,10 @@ export default function RegistroDiarioScreen({ navigation }) {
       setAnsiedade(null);
       setDesempenho(null);
       setSucesso(false);
-    }, [])
+      if (humorInicial !== null) {
+        navigation.setParams({ nivelHumorInicial: undefined });
+      }
+    }, [route.params?.nivelHumorInicial])
   );
 
   const preenchidos = 3

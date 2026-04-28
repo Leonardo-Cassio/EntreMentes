@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
@@ -49,9 +49,10 @@ const IcoDesemp = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="no
 // ── Componente principal ──────────────────────────────────────────────────
 export default function RegistroDiarioPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { token } = useAuth();
 
-  const [humor,      setHumor]      = useState(null);
+  const [humor,      setHumor]      = useState(location.state?.nivelHumorInicial ?? null);
   const [nota,       setNota]       = useState('');
   const [tempoTela,  setTempoTela]  = useState(7);
   const [sono,       setSono]       = useState(6);

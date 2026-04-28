@@ -56,6 +56,19 @@ function TooltipHumor({ active, payload, label }) {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [humorSelecionado, setHumorSelecionado] = useState(null);
+  const [modalVisivel, setModalVisivel] = useState(false);
+
+  const humorAtual = EMOJIS.find(e => e.nivel === humorSelecionado);
+
+  const handleSelecionarHumor = (nivel) => {
+    setHumorSelecionado(nivel);
+    setModalVisivel(true);
+  };
+
+  const handleConfirmar = () => {
+    setModalVisivel(false);
+    navigate('/registro', { state: { nivelHumorInicial: humorSelecionado } });
+  };
 
   return (
     <div className="dashboard-layout">
@@ -77,13 +90,32 @@ export default function DashboardPage() {
             <button
               key={e.nivel}
               className={`emoji-card ${humorSelecionado === e.nivel ? 'ativo' : ''}`}
-              onClick={() => setHumorSelecionado(e.nivel)}
+              onClick={() => handleSelecionarHumor(e.nivel)}
             >
               <span className="emoji-icon">{e.emoji}</span>
               <span className="emoji-label">{e.label}</span>
             </button>
           ))}
         </section>
+
+        {/* Modal de confirmação */}
+        {modalVisivel && (
+          <div className="modal-overlay" onClick={() => setModalVisivel(false)}>
+            <div className="modal-card" onClick={e => e.stopPropagation()}>
+              <span className="modal-emoji">{humorAtual?.emoji}</span>
+              <h3 className="modal-titulo">Registrar como "{humorAtual?.label}"?</h3>
+              <p className="modal-sub">
+                Quer completar o registro de humor de hoje com mais detalhes?
+              </p>
+              <button className="modal-btn-primario" onClick={handleConfirmar}>
+                Sim, completar registro
+              </button>
+              <button className="modal-btn-secundario" onClick={() => setModalVisivel(false)}>
+                Agora não
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Cards de métricas */}
         <section className="metricas-grid">

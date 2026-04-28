@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Dimensions, StatusBar,
+  StyleSheet, Dimensions, StatusBar, Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Svg, Polyline, Path, Rect, Line, Text as SvgText } from 'react-native-svg';
@@ -160,9 +160,22 @@ function GraficoBarra({ dados }) {
 }
 
 // ── Tela principal ───────────────────────────────────────────────────────
-export default function DashboardScreen() {
+export default function DashboardScreen({ navigation }) {
   const [humorSelecionado, setHumorSelecionado] = useState(null);
+  const [modalVisivel, setModalVisivel] = useState(false);
   const primeroNome = USUARIO.nome.split(' ')[0];
+
+  const humorAtual = EMOJIS.find(e => e.nivel === humorSelecionado);
+
+  const handleSelecionarHumor = (nivel) => {
+    setHumorSelecionado(nivel);
+    setModalVisivel(true);
+  };
+
+  const handleConfirmar = () => {
+    setModalVisivel(false);
+    navigation.navigate('Diário', { nivelHumorInicial: humorSelecionado });
+  };
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
@@ -191,7 +204,7 @@ export default function DashboardScreen() {
             <TouchableOpacity
               key={e.nivel}
               style={[s.emojiCard, humorSelecionado === e.nivel && s.emojiCardAtivo]}
-              onPress={() => setHumorSelecionado(e.nivel)}
+              onPress={() => handleSelecionarHumor(e.nivel)}
               activeOpacity={0.75}
             >
               <Text style={s.emojiIcon}>{e.emoji}</Text>
@@ -201,6 +214,32 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Modal de confirmação */}
+        <Modal
+          visible={modalVisivel}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setModalVisivel(false)}
+        >
+          <View style={s.modalOverlay}>
+            <View style={s.modalCard}>
+              <Text style={s.modalEmoji}>{humorAtual?.emoji}</Text>
+              <Text style={s.modalTitulo}>Registrar como "{humorAtual?.label}"?</Text>
+              <Text style={s.modalSub}>
+                Quer completar o registro de humor de hoje com mais detalhes?
+              </Text>
+
+              <TouchableOpacity style={s.modalBtnPrimario} onPress={handleConfirmar} activeOpacity={0.85}>
+                <Text style={s.modalBtnPrimarioTexto}>Sim, completar registro</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={s.modalBtnSecundario} onPress={() => setModalVisivel(false)} activeOpacity={0.7}>
+                <Text style={s.modalBtnSecundarioTexto}>Agora não</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
         {/* Métricas 2x2 */}
         <View style={s.metricasGrid}>
@@ -403,6 +442,67 @@ const s = StyleSheet.create({
     fontSize: fonts.sizes.sm,
     fontWeight: fonts.weights.bold,
     color: colors.text,
+  },
+
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  modalCard: {
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    padding: 28,
+    width: '100%',
+    alignItems: 'center',
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalEmoji: {
+    fontSize: 52,
+    marginBottom: 4,
+  },
+  modalTitulo: {
+    fontSize: fonts.sizes.md,
+    fontWeight: fonts.weights.bold,
+    color: colors.text,
+    textAlign: 'center',
+  },
+  modalSub: {
+    fontSize: fonts.sizes.sm,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  modalBtnPrimario: {
+    backgroundColor: colors.primary,
+    borderRadius: 99,
+    paddingVertical: 14,
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalBtnPrimarioTexto: {
+    color: colors.white,
+    fontWeight: fonts.weights.semibold,
+    fontSize: fonts.sizes.sm,
+  },
+  modalBtnSecundario: {
+    paddingVertical: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalBtnSecundarioTexto: {
+    color: colors.textSecondary,
+    fontSize: fonts.sizes.sm,
+    fontWeight: fonts.weights.medium,
   },
 
   // Avaliação
