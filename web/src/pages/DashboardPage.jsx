@@ -1,11 +1,40 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import circuloAmarelo from '../assets/Circulo amarelo.png';
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import Sidebar from '../components/Sidebar';
 import './DashboardPage.css';
+
+// ── Perfil comportamental (mock — substituir por GET /analytics/profile) ──
+const PERFIL = {
+  nome: 'Moderado',
+  emoji: '🟡',
+  risco: 'Moderado',
+  corRisco: '#E17055',
+  bgRisco: '#FFF3EE',
+  justificativa:
+    'Seu padrão indica equilíbrio parcial. Você mantém uma rotina de sono razoável, ' +
+    'mas o tempo de tela acima da média e o estresse moderado apontam para pontos de melhora. ' +
+    'Com pequenos ajustes de rotina é possível migrar para o perfil Equilibrado.',
+  dados: [
+    { label: 'Sono médio',      valor: '6.2h',     ref: 'ideal: 7–9h'  },
+    { label: 'Tempo de tela',   valor: '8.1h/dia', ref: 'ideal: < 6h'  },
+    { label: 'Atividade física',valor: '2.4h/sem', ref: 'ideal: > 4h'  },
+  ],
+  insights: [
+    'Tempo de tela acima do recomendado',
+    'Sono ligeiramente abaixo do ideal',
+    'Nível de estresse moderado persistente',
+  ],
+  recomendacoes: [
+    'Reduza o tempo de tela 1h antes de dormir',
+    'Adicione 30 min de caminhada ao dia',
+    'Pratique respiração diafragmática em momentos de tensão',
+  ],
+};
 
 // ── Dados estáticos (mock) ─────────────────────────────────────────────────
 const METRICAS = [
@@ -57,6 +86,7 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [humorSelecionado, setHumorSelecionado] = useState(null);
   const [modalVisivel, setModalVisivel] = useState(false);
+  const [modalPerfil, setModalPerfil] = useState(false);
 
   const humorAtual = EMOJIS.find(e => e.nivel === humorSelecionado);
 
@@ -119,16 +149,91 @@ export default function DashboardPage() {
 
         {/* Cards de métricas */}
         <section className="metricas-grid">
-          {METRICAS.map((m) => (
-            <div key={m.label} className={`metrica-card metrica-${m.cor}`}>
-              <div className="metrica-icone">{m.icone}</div>
-              <div className="metrica-info">
-                <p className="metrica-label">{m.label}</p>
-                <p className="metrica-valor">{m.valor}</p>
+          {METRICAS.map((m) => {
+            const isPerfil = m.label === 'Seu Perfil';
+            return (
+              <div
+                key={m.label}
+                className={`metrica-card metrica-${m.cor}${isPerfil ? ' metrica-clicavel' : ''}`}
+                onClick={isPerfil ? () => setModalPerfil(true) : undefined}
+              >
+                <div className="metrica-icone">{m.icone}</div>
+                <div className="metrica-info">
+                  <p className="metrica-label">{m.label}</p>
+                  <p className="metrica-valor">{m.valor}</p>
+                  {isPerfil && <p className="metrica-ver-mais">Ver detalhes →</p>}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </section>
+
+        {/* Modal de perfil comportamental */}
+        {modalPerfil && (
+          <div className="modal-overlay" onClick={() => setModalPerfil(false)}>
+            <div className="perfil-modal" onClick={e => e.stopPropagation()}>
+
+              {/* Header */}
+              <div className="perfil-modal-header">
+                <button className="perfil-modal-fechar" onClick={() => setModalPerfil(false)}>✕</button>
+                <img src={circuloAmarelo} alt="Perfil" className="perfil-modal-emoji" />
+                <h2 className="perfil-modal-nome">{PERFIL.nome}</h2>
+                <span
+                  className="perfil-modal-badge"
+                  style={{ color: PERFIL.corRisco, background: PERFIL.bgRisco }}
+                >
+                  Risco {PERFIL.risco}
+                </span>
+              </div>
+
+              {/* Corpo rolável */}
+              <div className="perfil-modal-corpo">
+
+                {/* Justificativa */}
+                <p className="perfil-modal-justificativa">{PERFIL.justificativa}</p>
+
+                {/* Dados do usuário */}
+                <div className="perfil-modal-dados">
+                  {PERFIL.dados.map(d => (
+                    <div key={d.label} className="perfil-dado-pill">
+                      <span className="perfil-dado-valor">{d.valor}</span>
+                      <span className="perfil-dado-label">{d.label}</span>
+                      <span className="perfil-dado-ref">{d.ref}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <hr className="perfil-modal-divisor" />
+
+                {/* Insights */}
+                <div className="perfil-modal-secao">
+                  <h3 className="perfil-modal-secao-titulo">⚠️ Pontos de atenção</h3>
+                  <ul className="perfil-lista">
+                    {PERFIL.insights.map((item, i) => (
+                      <li key={i} className="perfil-lista-item perfil-lista-insight">{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Recomendações */}
+                <div className="perfil-modal-secao">
+                  <h3 className="perfil-modal-secao-titulo">💡 Recomendações</h3>
+                  <ul className="perfil-lista">
+                    {PERFIL.recomendacoes.map((item, i) => (
+                      <li key={i} className="perfil-lista-item perfil-lista-rec">{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Disclaimer */}
+                <p className="perfil-modal-disclaimer">
+                  Este resultado é baseado em padrões estatísticos e não substitui acompanhamento profissional de saúde mental.
+                </p>
+              </div>
+
+            </div>
+          </div>
+        )}
 
         {/* Gráficos */}
         <section className="charts-grid">
