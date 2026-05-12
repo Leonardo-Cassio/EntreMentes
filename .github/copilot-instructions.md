@@ -7,490 +7,541 @@ refletindo o estado atual do projeto. Isso garante que o próximo chatbot consig
 retomar exatamente de onde o anterior parou.
 
 ### O que atualizar ao final de cada sessão:
-1. **Seção "Estado atual do desenvolvimento"** (abaixo) — marcar o que foi concluído,
-   o que ficou pendente e quais decisões foram tomadas.
-2. **Qualquer mudança arquitetural** — novos arquivos, renomeações, dependências
-   adicionadas ou removidas.
-3. **Bugs conhecidos ou débitos técnicos** identificados durante a sessão.
-
-### Estado atual do desenvolvimento
-
-> **Última atualização:** 2026-04-24
->
-> ---
->
-> ### Sprint 1 — Fundação ✅ CONCLUÍDA
->
-> **Backend + Banco de Dados**
-> - [x] Schema Prisma com todos os models (User, Humor, RegistroBemEstar, DefinicaoCluster, PerfilComportamental, SequenciaHumor)
-> - [x] Docker Compose para PostgreSQL
-> - [x] Auth básica (register/login) com JWT + bcrypt
-> - [x] CRUD completo de RegistroBemEstar — POST, GET lista, GET por id, PUT, DELETE
-> - [x] CRUD de Users autenticado (GET /users/me, PUT /users/me, DELETE /users/me)
-> - [x] Prisma singleton centralizado em src/lib/prisma.js
-> - [x] Respostas HTTP padronizadas { success, data, message }
-> - [x] Middleware de auth usando JWT_SECRET do .env (suporta formato Bearer)
-> - [x] CORS habilitado no server.js
->
-> **Frontend Mobile (React Native + Expo)**
-> - [x] Projeto Expo inicializado em mobile/ (SDK 54, React Native 0.81)
-> - [x] Tema centralizado: src/theme/colors.js + fonts.js
-> - [x] Componentes reutilizáveis: Input.js + Button.js
-> - [x] Tela de Login (LoginScreen.js)
-> - [x] Tela de Cadastro (RegisterScreen.js)
-> - [x] AuthStack (Stack Navigator) configurado
->
-> **Frontend Web (React + Vite)**
-> - [x] Projeto React + Vite inicializado em web/
-> - [x] Estilos globais + layout split-screen auth
-> - [x] Componentes: Input.jsx + Button.jsx
-> - [x] Tela Login (LoginPage.jsx)
-> - [x] Tela Cadastro (RegisterPage.jsx)
-> - [x] Rotas configuradas (/login, /register) com redirect padrão
->
-> ---
->
-> ### Sprint 2 — Versão Intermediária 🚧 EM ANDAMENTO (prazo: 24/04/2026)
-> Objetivo: versão intermediária com integrações parciais.
->
-> **1. Back-end com endpoints básicos da API (CRUD)** ✅
-> - [x] CRUD de RegistroBemEstar (POST, GET, GET/:id, PUT, DELETE)
-> - [x] Auth (register, login) com JWT + bcrypt
-> - [x] CRUD de usuário autenticado (GET/PUT/DELETE /users/me)
->
-> **2. Front-end integrado parcialmente ao back-end** ✅
-> - [x] AuthContext criado (web: localStorage | mobile: AsyncStorage)
-> - [x] Proteção de rotas web (RotaProtegida / RotaPublica no App.jsx)
-> - [x] Navegação mobile controlada pelo AuthContext (AuthStack ↔ AppTabs)
-> - [x] Login web salva token e redireciona para /dashboard automaticamente
-> - [x] Cadastro web e mobile chama API real via serviço centralizado (api.js)
-> - [x] Dashboard web criado com dados estáticos (gráficos Recharts)
-> - [x] Dashboard mobile criado com dados estáticos (gráficos SVG nativos)
-> - [x] Bottom navigation mobile com 5 abas (Dashboard, Diário, Humor, Histórico, Perfil)
-> - [x] Login mobile corrigido: usa api.js + chama auth.login() → navega para AppTabs automaticamente
-> - [x] Tela Registro Diário mobile criada (RegistroDiarioScreen.js) — sliders, emojis, barra de progresso, validação
-> - [x] Registro Diário web e mobile: handleSalvar() integrado ao POST /mood (API real)
->
-> **3. Banco de dados implementado e populado com dados de teste** ✅
-> - [x] Schema Prisma com todos os models
-> - [x] dados_tratados.json gerado (1800 registros, formato Prisma)
-> - [x] Script de seed criado (backend/prisma/seed.js)
-> - [x] Migrations aplicadas via `prisma db push` (migrations antigas estavam desatualizadas)
-> - [x] Seed executado com sucesso: 10 usuários + 1800 registros no banco
->
-> **4. Commits ativos de todos os integrantes no GitHub** ✅
-> - [x] Gabriel: commits em mobile, web, data-analysis, backend, docs
-> - [x] Leonardo: commit em mobile (HistoricoScreen), web (HistoricoPage), backend (authService fix), api.js (web e mobile)
->
-> **5. Computação em Nuvem II: ambiente em nuvem criado**
-> - [ ] Criar projeto no Google Cloud Platform (GCP)
-> - [ ] Criar tópicos Pub/Sub: mood-registered e profile-classified
-> - [ ] Criar service account + gcp-credentials.json (no .gitignore)
-> - [ ] Documentar prints da configuração inicial
->
-> **6. Mineração de Dados: coleta/tratamento + técnica inicial**
-> - [x] Dataset coletado (1800 registros — Student Mental Health)
-> - [x] Pré-processamento: EDA, limpeza, mapeamento de features, normalização MinMax
-> - [x] features_kmeans.csv exportado (6 features normalizadas, pronto para K-Means)
-> - [x] Aplicar K-Means (K=4) no features_kmeans.csv — 4 perfis identificados
-> - [x] Salvar modelo treinado (modelo_kmeans.pkl — 8.4 KB, joblib)
-> - [x] Gráficos gerados: cotovelo, silhouette, PCA 2D, radar, heatmap centroides
->
-> **7. Documentação intermediária atualizada**
-> - [ ] Atualizar documentação com evidências (prints das telas, trechos de código, prints do GCP)
-> - [x] copilot-instructions.md atualizado com estado real do projeto
-> - [ ] Atualizar este arquivo (copilot-instructions) ao final de cada sessão
->
-> ---
->
-> ### Sprint 3 — Finalização (Pendente)
-> - [ ] Mining Service Python (Flask + scikit-learn) em mining-service/
-> - [ ] Pub/Sub consumer (mood-registered) e publisher (profile-classified)
-> - [ ] Endpoint GET /analytics/profile no backend
-> - [ ] Dashboard (Desktop-3 Figma) com gráficos Recharts
-> - [x] Tela Registro Diário mobile (RegistroDiarioScreen.js) ✅
-> - [x] Tela Histórico mobile (HistoricoScreen.js) — cards expansíveis + FlatList ✅
- - [x] Tela Histórico web (HistoricoPage.jsx) — cards expansíveis ✅
- - [ ] Telas pós-login mobile restantes (Perfil, Humor)
-> - [ ] Testes unitários e de integração
-> - [ ] Deploy Railway (backend + PostgreSQL)
+1. **Seção "Estado atual do desenvolvimento"** — marcar o que foi concluído, pendente e decisões tomadas.
+2. **Seção "Arquivos modificados"** — registrar todos os arquivos criados ou alterados.
+3. **Seção "Pendências"** — atualizar o que fica para a próxima sessão.
+4. **Qualquer decisão de design ou arquitetura** relevante para continuidade.
 
 ---
 
-### Arquivos criados/modificados nesta sessão (22/04/2026)
+## Estado atual do desenvolvimento
+
+> **Última atualização:** 2026-05-12
+> **Sprint 2 apresentada com sucesso — sem objeções dos professores ✅**
+
+---
+
+### Sprint 1 — Fundação ✅ CONCLUÍDA
+
+**Backend**
+- [x] Schema Prisma com todos os models em português (ver seção Schema abaixo)
+- [x] Docker Compose para PostgreSQL local
+- [x] Auth completa: register/login com JWT + bcrypt
+- [x] CRUD completo de RegistroBemEstar (POST, GET, GET/:id, PUT, DELETE) na rota `/mood`
+- [x] CRUD de usuário autenticado (GET/PUT/DELETE `/users/me`)
+- [x] Prisma singleton em `src/lib/prisma.js`
+- [x] Respostas padronizadas `{ success, data, message }`
+- [x] Middleware de auth com JWT Bearer
+- [x] CORS habilitado
+
+**Mobile (React Native + Expo SDK 54)**
+- [x] Estrutura Expo inicializada com New Architecture habilitada
+- [x] Tema centralizado: `src/theme/colors.js` + `fonts.js`
+- [x] Componentes: `Input.js`, `Button.js`
+- [x] `LoginScreen.js` e `RegisterScreen.js`
+- [x] `AuthStack` (Stack Navigator)
+
+**Web (React + Vite)**
+- [x] Projeto React + Vite inicializado
+- [x] Componentes: `Input.jsx`, `Button.jsx`
+- [x] `LoginPage.jsx` e `RegisterPage.jsx`
+- [x] Rotas com redirect automático via `RotaProtegida` / `RotaPublica`
+
+---
+
+### Sprint 2 — Versão Intermediária ✅ CONCLUÍDA E APROVADA (apresentada em 12/05/2026)
+
+**1. Backend com CRUD completo** ✅
+- [x] Todos os endpoints funcionando e testados
+
+**2. Frontend integrado ao backend** ✅
+- [x] AuthContext (web: localStorage | mobile: AsyncStorage)
+- [x] Login/Cadastro web e mobile consumindo API real
+- [x] Dashboard web (gráficos Recharts, dados mock por ora)
+- [x] Dashboard mobile (dados mock, seletor de humor funcional)
+- [x] Bottom navigation mobile: 5 abas (Dashboard, Diário, Humor, Histórico, Perfil)
+- [x] Registro Diário web e mobile integrado ao `POST /mood`
+- [x] Histórico web e mobile integrado ao `GET /mood`
+
+**3. Banco populado com dados de teste** ✅
+- [x] `dados_tratados.json` com 1.800 registros gerado pelo preprocessing.py
+- [x] Script de seed (`backend/prisma/seed.js`) executado com sucesso
+- [x] 10 usuários + 1.800 registros no banco
+
+**4. Commits de todos os integrantes** ✅
+- [x] Gabriel: mobile, web, data-analysis, backend, docs
+- [x] Leonardo: HistoricoScreen (mobile), HistoricoPage (web), authService fix, api.js
+
+**5. Computação em Nuvem — Pub/Sub** ⏳ PENDENTE
+- [ ] Professor ainda não liberou acesso ao GCP Console
+- [ ] Criar projeto `entrementes-pi`, tópicos `mood-registered` e `profile-classified`
+- [ ] Service account + `gcp-credentials.json`
+- Toda a arquitetura está planejada e documentada (ver seção Pub/Sub abaixo)
+
+**6. Mineração de Dados** ✅
+- [x] Dataset: *Student Mental Health & Academic Performance* — Kaggle, 1.800 registros
+- [x] `preprocessing.py`: EDA, limpeza, mapeamento PHQ-9→humor, normalização MinMaxScaler
+- [x] `kmeans_clustering.py`: K-Means K=4, validação cotovelo + silhouette (0.123)
+- [x] `modelo_kmeans.pkl` gerado (8.4 KB, joblib)
+- [x] 9 gráficos gerados em `data-analysis/graficos/`
+- [x] `data-analysis/README.md` com documentação completa do pipeline
+
+**7. Documentação** ✅
+- [x] `Documentação/EntreMentes_Sprint2_Doc.md` (Notion-ready, 17 placeholders de prints)
+- [x] `data-analysis/README.md` com todos os gráficos e justificativas
+- [x] `README.md` raiz atualizado com tabela de telas e endpoints
+
+---
+
+### Sprint 3 — Finalização 🚧 EM ANDAMENTO
+
+- [ ] Mining Service Python (Flask) — `/classify` endpoint carregando `modelo_kmeans.pkl`
+- [ ] Pub/Sub: publisher no backend (após `POST /mood`) + subscriber no mining-service
+- [ ] Endpoint `GET /analytics/profile` no backend (busca perfil classificado)
+- [ ] Conectar Dashboard (web e mobile) aos dados reais do banco
+- [ ] Conectar modal "Seu Perfil" ao `GET /analytics/profile` real (hoje usa mock)
+- [ ] Deploy Railway (backend + PostgreSQL)
+- [ ] Tela Humor mobile (hoje é placeholder — pode usar o modal de perfil)
+- [ ] Testes unitários e de integração
+
+---
+
+## Histórico de sessões
+
+### Sessão 22/04/2026
 ```
+mobile/src/screens/RegistroDiarioScreen.js  ← NOVO: sliders, emojis, barra progresso
+mobile/src/navigation/AppTabs.js            ← aba "Diário" → RegistroDiarioScreen
+mobile/package.json                         ← @react-native-community/slider adicionado
+data-analysis/kmeans_clustering.py          ← NOVO: K-Means K=4, validação, pkl
+data-analysis/modelo_kmeans.pkl             ← NOVO: modelo serializado
+data-analysis/graficos/06–09               ← NOVOS: cotovelo, PCA, radar, distribuição
+```
+
+### Sessão 24/04/2026 — manhã
+```
+backend/src/services/authService.js         ← CORRIGIDO: expiresIn fixo → JWT_EXPIRES_IN do .env
+web/src/services/api.js                     ← CORRIGIDO: ...options sobrescrevia Content-Type
+web/src/pages/RegistroDiarioPage.jsx        ← handleSalvar() integrado ao POST /mood
+web/src/pages/HistoricoPage.jsx             ← NOVO: cards expansíveis + GET /mood
+web/src/App.jsx                             ← rota /historico adicionada
+mobile/src/services/api.js                  ← mesma correção + createRegistro/listRegistros
+mobile/src/screens/RegistroDiarioScreen.js  ← handleSalvar() integrado ao POST /mood
+mobile/src/screens/HistoricoScreen.js       ← NOVO: FlatList + cards expansíveis + GET /mood
+mobile/src/navigation/AppTabs.js            ← aba Histórico real; aba Perfil com logout
+```
+
+### Sessão 24/04/2026 — tarde
+```
+Documentação/EntreMentes_Sprint2_Doc.md     ← NOVO: doc Sprint 2 completa, Notion-ready
+mobile/app.json                             ← NSAppTransportSecurity (iOS HTTP)
+mobile/src/services/api.js                  ← timeout 8s + fallback IP tunnel
+```
+
+### Sessão 24/04/2026 — noite (redesign auth)
+```
+web/src/pages/LoginPage.jsx                 ← REDESENHADO: split-screen, typewriter "Olá!" 2s
+web/src/pages/RegisterPage.jsx              ← REDESENHADO: espelhado, typewriter "Seja bem-vindo!" 3s
+web/src/App.css                             ← auth styles reescritos, animações slide
+web/src/components/Button.css               ← variante .btn-dark (preto, pill)
+mobile/src/screens/LoginScreen.js           ← REDESENHADO: LinearGradient + card branco
+mobile/src/screens/RegisterScreen.js        ← REDESENHADO: mesmo estilo, typewriter 3s
+mobile/App.js                               ← animação fade+scale na troca AuthStack↔AppTabs
+```
+
+### Sessão 12/05/2026 (atual)
+```
+--- WEB ---
+web/src/pages/DashboardPage.jsx             ← emoji humor → Modal confirmação → /registro
+                                               card "Seu Perfil" clicável → modal perfil completo
+                                               (gradiente header, dados, insights, recomendações)
+web/src/pages/DashboardPage.css             ← estilos modal humor + modal perfil
+web/src/pages/RegistroDiarioPage.jsx        ← useLocation lê state.nivelHumorInicial do Dashboard
+web/src/assets/Circulo amarelo.png          ← NOVO: imagem usada no modal de perfil
+
 --- MOBILE ---
-mobile/src/screens/LoginScreen.js         ← CORRIGIDO: fetch hardcoded → api.js + auth.login()
-mobile/src/screens/RegistroDiarioScreen.js← NOVO: tela completa (sliders, emojis, progresso)
-mobile/src/navigation/AppTabs.js          ← ATUALIZADO: aba "Diário" → RegistroDiarioScreen
-mobile/package.json                       ← ATUALIZADO: @react-native-community/slider adicionado
+mobile/src/screens/DashboardScreen.js       ← emoji humor → Modal nativo → navigate("Diário", params)
+mobile/src/screens/RegistroDiarioScreen.js  ← lê route.params.nivelHumorInicial, pré-preenche humor
 
 --- DATA ANALYSIS ---
-data-analysis/kmeans_clustering.py        ← NOVO: K-Means K=4, validação, 4 gráficos, pkl
-data-analysis/modelo_kmeans.pkl           ← NOVO: modelo serializado (8.4 KB, joblib)
-data-analysis/graficos/06_elbow_silhouette.png ← NOVO
-data-analysis/graficos/07_clusters_pca.png     ← NOVO
-data-analysis/graficos/08_perfis_radar.png     ← NOVO
-data-analysis/graficos/09_distribuicao_clusters.png ← NOVO
+data-analysis/README.md                     ← NOVO: documentação completa do pipeline com gráficos
+
+--- DOCS ---
+README.md                                   ← atualizado com tabela de telas e endpoints reais
 ```
-
-### Arquivos criados/modificados nesta sessão (24/04/2026)
-```
---- BACKEND ---
-backend/src/services/authService.js       ← CORRIGIDO: expiresIn usa JWT_EXPIRES_IN do .env (era "1d" fixo)
-
---- WEB ---
-web/src/services/api.js                   ← CORRIGIDO: função request() reestruturada — ...options sobrescrevia headers e perdia Content-Type; createRegistro + listRegistros adicionados
-web/src/pages/RegistroDiarioPage.jsx      ← ATUALIZADO: handleSalvar() integrado ao POST /mood
-web/src/pages/HistoricoPage.jsx           ← NOVO: lista registros do usuário (cards expansíveis)
-web/src/pages/HistoricoPage.css           ← NOVO: estilos da página de histórico
-web/src/App.jsx                           ← ATUALIZADO: rota /historico adicionada
-
---- MOBILE ---
-mobile/src/services/api.js               ← CORRIGIDO: mesma correção do request() + createRegistro + listRegistros adicionados
-mobile/src/screens/RegistroDiarioScreen.js← ATUALIZADO: handleSalvar() integrado ao POST /mood
-mobile/src/screens/HistoricoScreen.js    ← NOVO: lista registros com cards expansíveis + FlatList
-mobile/src/navigation/AppTabs.js         ← ATUALIZADO: aba Histórico usa HistoricoScreen real; aba Perfil ganhou nome, email e botão "Sair da conta"
-mobile/src/screens/RegistroDiarioScreen.js← CORRIGIDO: useFocusEffect reseta o formulário ao focar a aba — tela de sucesso não ficava mais presa após salvar
-```
-
-### Arquivos criados/modificados nesta sessão (24/04/2026 — tarde)
-```
---- DOCUMENTAÇÃO ---
-Documentação/EntreMentes_Sprint2_Doc.md   ← NOVO: documentação Sprint 2 completa (Notion-ready)
-
---- MOBILE ---
-mobile/app.json                           ← ATUALIZADO: NSAppTransportSecurity adicionado (iOS HTTP)
-mobile/src/services/api.js               ← ATUALIZADO: timeout de 8s no fetch + fallback IP fixo para tunnel
-```
-
-### Arquivos criados/modificados nesta sessão (24/04/2026 — noite)
-```
---- WEB ---
-web/src/pages/LoginPage.jsx              ← REDESENHADO: layout split-screen (form esquerda / gradiente direita)
-                                            typewriter "Olá!" em 2s, cursor piscando, botão dark pill
-web/src/pages/RegisterPage.jsx           ← REDESENHADO: layout espelhado (gradiente esquerda / form direita)
-                                            typewriter "Seja bem-vindo!" em 3s, mesma animação
-web/src/App.css                          ← ATUALIZADO: estilos auth completamente reescritos
-                                            auth-layout, auth-form-side, auth-brand, auth-cursor,
-                                            animações de entrada authSlideIn / authSlideInReversed
-web/src/components/Button.css            ← ATUALIZADO: variante .btn-dark adicionada (preto, pill shape)
-
---- MOBILE ---
-mobile/src/screens/LoginScreen.js        ← REDESENHADO: fundo LinearGradient, card branco centralizado,
-                                            typewriter "Olá!" em 2s, cursor Animated, card slide-up ao montar
-mobile/src/screens/RegisterScreen.js     ← REDESENHADO: mesmo estilo do Login,
-                                            typewriter "Seja bem-vindo!" em 3s, 4 campos, validações mantidas
-mobile/App.js                            ← ATUALIZADO: animação fade+scale na troca AuthStack ↔ AppTabs
-                                            (transição login→dashboard e logout→login)
-```
-
-### Pendências para próxima sessão
-- GCP: criar projeto, tópicos Pub/Sub (mood-registered, profile-classified), service account (item 5 Sprint 2)
-- Documentação: capturar prints das telas e dos gráficos de clustering como evidência (item 7 Sprint 2)
-- Dashboard web/mobile: conectar aos dados reais do banco (hoje usa mock estático)
-- Telas mobile restantes: Perfil, Humor
 
 ---
 
-### Pendências conhecidas
-- Imagem das pedras zen (Login desktop): usar URL Unsplash por ora; substituir por arquivo local quando disponível
-- Schema Prisma ainda usa nomes em português (RegistroBemEstar, etc.) — manter assim, é a versão canônica
-- Discrepância entre schema Prisma do copilot-instructions (inglês) e o schema real do projeto (português) — o schema REAL está em backend/prisma/schema.prisma e usa português
-- Bug corrigido (24/04): função request() em api.js (web e mobile) usava ...options que sobrescrevia o Content-Type — Express não parseava o body e todos os campos chegavam undefined no backend
-- Bug corrigido (24/04): RegistroDiarioScreen mobile — tela de sucesso ficava presa pois Bottom Tabs não desmontam o componente ao trocar de aba; resolvido com useFocusEffect resetando todo o estado ao focar
+## Pendências para próxima sessão
+
+1. **GCP / Pub/Sub** — aguardando professor liberar acesso ao Console. Quando liberado:
+   - Criar projeto `entrementes-pi`
+   - Criar tópicos: `mood-registered`, `profile-classified`
+   - Criar subscriptions: `mining-worker`, `profile-classified-backend`
+   - Criar service account, baixar `gcp-credentials.json`
+
+2. **Mining Service Flask** — criar `mining-service/app.py` com endpoint `/classify` que carrega `modelo_kmeans.pkl` e classifica novos registros
+
+3. **Endpoint `GET /analytics/profile`** — backend Node.js busca perfil do usuário em `BehavioralProfile` e retorna com insights e recomendações
+
+4. **Modal "Seu Perfil" web** — trocar constante `PERFIL` mock por chamada real ao `GET /analytics/profile`
+
+5. **Dashboard web/mobile** — conectar gráficos de evolução ao `GET /mood` real (atualmente usa arrays estáticos)
+
+6. **Tela Humor mobile** — hoje é placeholder. Pode receber o mesmo modal de perfil do web.
+
+7. **Deploy Railway** — backend + PostgreSQL em produção
 
 ---
 
+## Decisões de design importantes (não óbvias)
 
-## Link FIGMA do projeto:
+### Identidade visual — Auth pages
+- **Gradiente padrão:** `linear-gradient(135deg, #7B2FBE 0%, #4A90D9 60%, #6C5CE7 100%)`
+- Web Login: form à **esquerda** (52%), gradiente à **direita**
+- Web Cadastro: gradiente à **esquerda**, form à **direita** — layout espelhado via JSX order (sem `flex-direction: row-reverse`)
+- Mobile: `LinearGradient` do `expo-linear-gradient` (já instalado), card branco centralizado com `borderRadius: 14`
+- Animação de entrada: `Animated.timing` no mobile (fade + translateY), CSS keyframes no web (`authSlideIn` / `authSlideInReversed`)
 
- https://www.figma.com/design/t3bPkPFGW4uXckBCziasEx/EntreMentes?node-id=0-1&p=f&t=cpJM06Qzt1sGj8P5-0
+### Typewriter animation
+- Implementada via `setInterval` em JavaScript, **não** via CSS `steps()` — mais confiável com fontes proporcionais (Inter)
+- Login: "Olá!" em 2 segundos | Cadastro: "Seja bem-vindo!" em 3 segundos
+- Cursor `|` pisca via `Animated.loop` (mobile) ou CSS `cursorBlink` (web), desaparece ao terminar
 
- Utilizar sempre para observar a identidade visual, todas as telas não precisam seguir a risca o design proposto do figma, é até recomendado que haja melhorias e adaptações, mas a identidade visual deve ser mantida.
+### Fluxo Dashboard → Registro Diário (humor pré-selecionado)
+- **Mobile:** `navigation.navigate('Diário', { nivelHumorInicial: nivel })` → `RegistroDiarioScreen` lê via `route.params` no `useFocusEffect`. Após ler, chama `navigation.setParams({ nivelHumorInicial: undefined })` para não persistir.
+- **Web:** `navigate('/registro', { state: { nivelHumorInicial: nivel } })` → `RegistroDiarioPage` lê via `useLocation().state` no `useState` inicial. State do React Router não persiste no reload — comportamento correto.
+
+### Modal de Perfil Comportamental (web)
+- Ativado pelo card "Seu Perfil" no Dashboard
+- Header com gradiente idêntico ao da auth (`#7B2FBE → #4A90D9`)
+- Imagem `Circulo amarelo.png` (em `web/src/assets/`) substituiu o emoji 🟡
+- Dados mock na constante `PERFIL` em `DashboardPage.jsx` — shape exato do que `GET /analytics/profile` vai retornar. Quando o endpoint ficar pronto, basta substituir por `useState` + `useEffect`
+- Estrutura do mock: `{ nome, emoji, risco, corRisco, bgRisco, justificativa, dados[], insights[], recomendacoes[] }`
+
+### Outliers mantidos no pré-processamento
+- Decisão consciente: valores extremos (3h de sono, 12h de tela) são dados reais de estudantes sob pressão
+- Removê-los eliminaria os perfis "Sob Pressão" e "Em Alerta" que o K-Means precisa detectar
+
+### K=4 para o K-Means
+- Método do cotovelo indica inflexão em K=4
+- Silhouette score K=4: **0.123** (modesto, esperado para dados comportamentais com sobreposição natural)
+- K=2 tem silhouette maior (0.180) mas gera apenas 2 perfis — insuficiente para o app
+
+### Bug histórico corrigido (24/04) — api.js
+- O `request()` original usava `...options` que sobrescrevia o header `Content-Type: application/json`
+- Express recebia o body sem Content-Type e não parseava → todos os campos chegavam `undefined`
+- Correção: desestruturar `{ method, headers, body }` explicitamente em vez de espalhar `options`
+
+---
+
+## Link Figma
+
+https://www.figma.com/design/t3bPkPFGW4uXckBCziasEx/EntreMentes?node-id=0-1&p=f&t=cpJM06Qzt1sGj8P5-0
+
+Utilizar para referência de identidade visual. As telas **não precisam seguir o Figma à risca** — melhorias e adaptações são bem-vindas, mas a paleta de cores e tipografia devem ser mantidas.
+
+---
 
 ## Visão geral do projeto
 
-EntreMentes é uma plataforma de registro e análise de humor de estudantes universitários.
+**EntreMentes** é uma plataforma de registro e análise de humor de estudantes universitários.
 Projeto Interdisciplinar (PI) do 6º semestre — FATEC DSM.
-Desenvolvido por 2 integrantes em ~3 meses (março a junho de 2026).
+Desenvolvido por **Gabriel Fillip** e **Leonardo Cássio** — março a junho de 2026.
 
-O sistema coleta registros emocionais diários e aplica mineração de dados (K-Means, K=4)
-para classificar o estudante em um de 4 perfis comportamentais.
+O sistema coleta registros emocionais diários (humor, sono, tela, exercício, estresse, desempenho) e aplica K-Means (K=4) para classificar o estudante em um de 4 perfis comportamentais, disponibilizando insights e recomendações personalizadas.
 
 ---
 
 ## Arquitetura do sistema
 
 ```
-mobile/          → React Native + Expo (Android e iOS)
-web/             → React.js + Recharts (dashboard)
-backend/         → Node.js + Express + Prisma (API REST)
-mining-service/  → Python 3.11 + Flask + scikit-learn
-docs/            → Documentação do PI por sprint
+mobile/          → React Native 0.81 + Expo SDK 54 (Android e iOS)
+web/             → React 18 + Vite + Recharts 2 (dashboard web)
+backend/         → Node.js v24 + Express 4 + Prisma 5 (API REST)
+mining-service/  → Python 3.11 + Flask 3 + scikit-learn (classificação IA)
+data-analysis/   → Scripts de pré-processamento e treinamento do modelo
 ```
 
-Todos os serviços se comunicam via HTTP/REST e Google Cloud Pub/Sub.
-Deploy em Railway (free tier). Banco PostgreSQL hospedado no Railway.
+Comunicação entre serviços: HTTP/REST para operações síncronas + Google Cloud Pub/Sub para classificação assíncrona.
 
 ---
 
-## Stack e versões
+## Stack e versões (reais, verificadas)
 
-| Camada     | Tecnologia                                               |
-|------------|----------------------------------------------------------|
-| Mobile     | React Native 0.74, Expo SDK 51                           |
-| Web        | React 18, Recharts 2                                     |
-| Backend    | Node.js v24 LTS, Express 4, Prisma 5                     |
-| Banco      | PostgreSQL 16                                            |
-| Mineração  | Python 3.11, Flask 3, scikit-learn 1.4, pandas 2, numpy 1.26 |
-| Mensageria | Google Cloud Pub/Sub (@google-cloud/pubsub, google-cloud-pubsub) |
-| Auth       | JWT (jsonwebtoken), bcrypt                               |
-| Docs API   | swagger-jsdoc + swagger-ui-express                       |
+| Camada      | Tecnologia                                                          |
+|-------------|---------------------------------------------------------------------|
+| Mobile      | React Native 0.81, Expo SDK 54, New Architecture habilitada         |
+| Web         | React 18, Vite, Recharts 2, React Router DOM v6                     |
+| Backend     | Node.js v24 LTS, Express 4, Prisma 5, PostgreSQL 16                 |
+| Auth        | jsonwebtoken, bcrypt                                                |
+| Mineração   | Python 3.11, Flask 3, scikit-learn 1.4, pandas 2, numpy 1.26, joblib|
+| Mensageria  | Google Cloud Pub/Sub (planejado — acesso GCP pendente)              |
+| Expo libs   | expo-linear-gradient ~15.0.8, expo-font ~14.0.11                    |
+| Mobile libs | @react-native-community/slider, @react-navigation/bottom-tabs       |
+
+---
+
+## Telas implementadas
+
+### Web
+
+| Tela | Rota | Status | Detalhes |
+|------|------|--------|----------|
+| Login | `/login` | ✅ | Split-screen: form esquerda / gradiente direita. Typewriter "Olá!" 2s. Botão dark pill. |
+| Cadastro | `/register` | ✅ | Espelhado: gradiente esquerda / form direita. Typewriter "Seja bem-vindo!" 3s. |
+| Dashboard | `/dashboard` | ✅ | Métricas mock, gráficos Recharts, seletor humor com modal, card perfil clicável com modal detalhado |
+| Registro Diário | `/registro` | ✅ | Sliders, seleções, barra progresso, POST /mood. Recebe nivelHumorInicial via Router state. |
+| Histórico | `/historico` | ✅ | Cards expansíveis, GET /mood integrado |
+
+### Mobile
+
+| Tela | Aba | Status | Detalhes |
+|------|-----|--------|----------|
+| Login | — | ✅ | LinearGradient fundo, card branco centralizado, typewriter 2s, slide-up ao montar |
+| Cadastro | — | ✅ | Mesmo estilo login, typewriter 3s, 4 campos |
+| Dashboard | Dashboard | ✅ | Métricas mock, seletor humor com Modal nativo, navega para Diário com param |
+| Registro Diário | Diário | ✅ | Sliders, emojis, progresso, POST /mood. Recebe nivelHumorInicial via route.params. |
+| Histórico | Histórico | ✅ | FlatList, cards expansíveis, GET /mood integrado |
+| Perfil | Perfil | ✅ | Nome, email, botão logout |
+| Humor | Humor | 🔜 | Placeholder — Sprint 3 (candidato a exibir modal de perfil IA) |
+
+---
+
+## Fluxo UX: Dashboard → Registro Diário (humor pré-selecionado)
+
+```
+Usuário clica emoji no Dashboard
+         ↓
+Modal de confirmação aparece
+"Registrar como 'Bom'? Quer completar o registro?"
+         ↓
+    [Sim]          [Agora não]
+      ↓                ↓
+Navega para         Fecha modal,
+Registro Diário     humor fica
+com humor           selecionado
+pré-preenchido      no Dashboard
+```
+
+**Web:** `navigate('/registro', { state: { nivelHumorInicial } })`
+**Mobile:** `navigation.navigate('Diário', { nivelHumorInicial })`
+
+---
+
+## Fluxo UX: Modal de Perfil Comportamental
+
+```
+Card "Seu Perfil" no Dashboard (web)
+         ↓
+Modal abre com:
+  - Header gradiente + círculo amarelo + nome do perfil
+  - Badge de risco (cor dinâmica)
+  - Justificativa em texto
+  - 3 pills: sono médio / tempo tela / atividade física (valor + referência ideal)
+  - Insights (pontos de atenção, fundo laranja)
+  - Recomendações (fundo azul)
+  - Disclaimer "não substitui acompanhamento profissional"
+         ↓
+Dados: hoje mock (constante PERFIL em DashboardPage.jsx)
+Futuramente: GET /analytics/profile
+```
 
 ---
 
 ## Mensageria — Google Cloud Pub/Sub
 
-O Pub/Sub é o serviço de nuvem central do projeto. Ele desacopla o backend Node.js
-do serviço de mineração Python. A classificação de perfil ocorre de forma assíncrona
-toda vez que um novo registro de humor é salvo.
+**Status atual: planejado. Código ainda não implementado. Acesso GCP pendente.**
 
 ### Fluxo
-
 ```
-App Mobile
-  └─► POST /mood ─► API Backend ─► salva no PostgreSQL
-                              └─► publica em: mood-registered
-                                        │
-                                   [Google Cloud Pub/Sub]
-                                        │
-                              sub: mining-worker
-                                        │
-                              Serviço Python
-                              └─► classifica com K-Means
-                              └─► publica em: profile-classified
-                                        │
-                                   [Google Cloud Pub/Sub]
-                                        │
-                              sub: profile-classified-backend
-                                        │
-                              API Backend
-                              └─► atualiza behavioral_profiles
-                              └─► perfil disponível para o usuário
+POST /mood (usuário salva registro)
+      ↓
+Node.js salva no PostgreSQL → responde 200 para o usuário
+      ↓
+Node.js publica mensagem em: mood-registered
+      ↓
+      [Google Cloud Pub/Sub]
+      ↓ subscription: mining-worker
+Python (mining-service) recebe
+      ↓
+Carrega modelo_kmeans.pkl → classifica cluster
+      ↓
+Publica resultado em: profile-classified
+      ↓
+      [Google Cloud Pub/Sub]
+      ↓ subscription: profile-classified-backend
+Node.js recebe → atualiza BehavioralProfile no banco
+      ↓
+GET /analytics/profile disponível para o usuário
 ```
 
-### Tópicos
+### Tópicos e subscriptions
 
-| Tópico                 | Publisher | Subscriber      |
-|------------------------|-----------|-----------------|
-| `mood-registered`      | Node.js   | Python (mining) |
-| `profile-classified`   | Python    | Node.js         |
+| Tópico | Publisher | Subscription | Subscriber |
+|--------|-----------|--------------|------------|
+| `mood-registered` | Node.js | `mining-worker` | Python |
+| `profile-classified` | Python | `profile-classified-backend` | Node.js |
 
-### Formato — mood-registered
+### Mensagem mood-registered
 ```json
 {
   "userId": "uuid",
   "entryId": "uuid",
-  "moodLevel": 3,
-  "screenTime": 8.5,
-  "sleepDuration": 5.0,
-  "physicalActivity": 1.0,
-  "stressLevel": "Alto",
-  "anxiousBeforeExams": true,
-  "academicPerformance": "Mesmo",
-  "timestamp": "2026-03-27T22:00:00Z"
+  "nivelHumor": 3,
+  "tempoTela": 8.5,
+  "duracaoSono": 5.0,
+  "atividadeFisica": 1.0,
+  "nivelEstresse": "Alto",
+  "ansiedadeAntesProva": true,
+  "desempenhoAcademico": "Mesmo",
+  "timestamp": "2026-05-12T22:00:00Z"
 }
 ```
 
-### Formato — profile-classified
+### Mensagem profile-classified
 ```json
 {
   "userId": "uuid",
-  "clusterId": 2,
+  "clusterId": 0,
   "profileName": "Sob Pressão",
   "riskLevel": "Moderado-Alto",
   "insights": ["Sono abaixo da média", "Atividade física muito baixa"],
-  "recommendations": ["Durma mais", "Faça exercício", "Reduza tempo de tela"],
-  "processedAt": "2026-03-27T22:00:05Z"
+  "recomendacoes": ["Reduza tempo de tela 1h antes de dormir", "30min de caminhada"],
+  "processedAt": "2026-05-12T22:00:05Z"
 }
-```
-
-### Implementação Node.js
-```javascript
-// backend/src/services/pubsub.service.js
-const { PubSub } = require('@google-cloud/pubsub');
-const pubsub = new PubSub({ projectId: process.env.GCP_PROJECT_ID });
-
-async function publishMoodRegistered(data) {
-  const topic = pubsub.topic('mood-registered');
-  await topic.publishMessage({ data: Buffer.from(JSON.stringify(data)) });
-}
-
-async function subscribeProfileClassified() {
-  const sub = pubsub.subscription('profile-classified-backend');
-  sub.on('message', async (message) => {
-    const data = JSON.parse(message.data.toString());
-    await updateUserProfile(data); // atualiza behavioral_profiles
-    message.ack();
-  });
-}
-
-module.exports = { publishMoodRegistered, subscribeProfileClassified };
-```
-
-### Implementação Python
-```python
-# mining-service/pubsub_consumer.py
-from google.cloud import pubsub_v1
-import json, os
-
-subscriber = pubsub_v1.SubscriberClient()
-publisher  = pubsub_v1.PublisherClient()
-
-sub_path    = subscriber.subscription_path(os.environ['GCP_PROJECT_ID'], 'mining-worker')
-topic_path  = publisher.topic_path(os.environ['GCP_PROJECT_ID'], 'profile-classified')
-
-def callback(message):
-    data   = json.loads(message.data.decode('utf-8'))
-    result = classify_user(data)  # chama classifier.py
-    publisher.publish(topic_path, json.dumps(result).encode('utf-8'))
-    message.ack()
-
-subscriber.subscribe(sub_path, callback=callback)
 ```
 
 ---
 
-## Banco de dados — schema Prisma
+## Banco de dados — Schema Prisma real (em português)
+
+> ⚠️ O schema REAL usa nomes em português. Ignorar qualquer schema em inglês que apareça em versões antigas deste documento.
 
 ```prisma
 model User {
-  id            String   @id @default(uuid())
-  name          String
-  email         String   @unique
-  passwordHash  String
-  course        String?
-  semester      Int?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  moodEntries       WellbeingMoodEntry[]
-  behavioralProfile BehavioralProfile?
-  moodStreak        MoodStreak?
+  registros        RegistroBemEstar[]
+  perfilComport    PerfilComportamental?
 }
 
-model WellbeingMoodEntry {
+model RegistroBemEstar {
   id                   String   @id @default(uuid())
   userId               String
-  moodLevel            Int
-  note                 String?
-  screenTime           Float
-  sleepDuration        Float
-  physicalActivity     Float
-  stressLevel          String
-  anxiousBeforeExams   Boolean
-  academicPerformance  String
+  nivelHumor           Int      // 1–5
+  nota                 String?
+  tempoTela            Float    // horas/dia
+  duracaoSono          Float    // horas/noite
+  atividadeFisica      Float    // horas/semana
+  nivelEstresse        String   // "Baixo" | "Medio" | "Alto"
+  ansiedadeAntesProva  Boolean
+  desempenhoAcademico  String   // "Melhorou" | "Mesmo" | "Piorou"
   createdAt            DateTime @default(now())
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model ClusterDefinition {
-  id              Int      @id @default(autoincrement())
-  clusterLabel    Int      @unique
-  profileName     String
-  description     String
-  centroidData    Json
-  characteristics Json
-  studentCount    Int      @default(0)
-  generatedAt     DateTime @default(now())
-  profiles BehavioralProfile[]
-}
-
-model BehavioralProfile {
+model PerfilComportamental {
   id          String   @id @default(uuid())
   userId      String   @unique
-  clusterId   Int
-  riskLevel   String
+  clusterId   Int      // 0–3
+  nomePerfil  String
+  nivelRisco  String
   insights    Json
-  generatedAt DateTime @default(now())
-  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cluster ClusterDefinition @relation(fields: [clusterId], references: [id])
-}
+  geradoEm   DateTime @default(now())
 
-model MoodStreak {
-  id             String    @id @default(uuid())
-  userId         String    @unique
-  currentStreak  Int       @default(0)
-  longestStreak  Int       @default(0)
-  lastEntryDate  DateTime?
-  updatedAt      DateTime  @updatedAt
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 ```
+
+> Nota: o schema completo com todos os models está em `backend/prisma/schema.prisma`. O acima é uma versão simplificada dos models principais.
 
 ---
 
 ## Endpoints da API REST
 
-Base URL: `http://localhost:3000/api`
+Base URL (local): `http://localhost:3000`
 
-### Auth
-- `POST /auth/register`
-- `POST /auth/login`
-- `POST /auth/logout`
-
-### Users
-- `GET /users/me`
-- `PUT /users/me`
-- `DELETE /users/me`
-
-### Mood
-- `POST /mood` — salva registro e publica no Pub/Sub automaticamente
-- `GET /mood` — histórico (?from=&to=&limit=)
-- `GET /mood/:id`
-- `PUT /mood/:id`
-
-### Analytics
-- `GET /analytics/summary`
-- `GET /analytics/profile` — retorna perfil classificado via Pub/Sub
-
-### Mining Service (Flask — porta 5000)
-- `GET /health`
-- `GET /clusters`
-
-> A classificação não é chamada via HTTP. É acionada automaticamente
-> pelo Pub/Sub quando um novo registro é publicado no tópico mood-registered.
+| Método | Rota | Auth | Descrição |
+|--------|------|------|-----------|
+| POST | `/auth/register` | — | Criar conta |
+| POST | `/auth/login` | — | Login, retorna JWT |
+| GET | `/users/me` | JWT | Dados do usuário |
+| PUT | `/users/me` | JWT | Atualizar perfil |
+| DELETE | `/users/me` | JWT | Deletar conta |
+| POST | `/mood` | JWT | Criar registro de humor |
+| GET | `/mood` | JWT | Listar registros do usuário |
+| GET | `/mood/:id` | JWT | Buscar registro por ID |
+| PUT | `/mood/:id` | JWT | Atualizar registro |
+| GET | `/analytics/profile` | JWT | Perfil comportamental classificado (Sprint 3) |
 
 ---
 
 ## Os 4 perfis comportamentais (K-Means K=4)
 
-| Cluster | Nome         | Risco         | Características                              |
-|---------|--------------|---------------|----------------------------------------------|
-| 0       | Equilibrado  | Baixo         | Sono ~7.5h, exercício ~5h/sem, estresse baixo |
-| 1       | Moderado     | Moderado      | Sono ~6h, exercício ~3h/sem, estresse médio  |
-| 2       | Sob Pressão  | Moderado-Alto | Sono ~5h, tela ~9h, sem exercício, estresse alto |
-| 3       | Em Alerta    | Alto          | Sono ~4.5h, tela ~10h, desempenho caindo     |
+> Valores reais dos centroides obtidos no treinamento com 1.800 estudantes.
+
+| Cluster | Nome | Risco | Distribuição | Características principais |
+|---------|------|-------|-------------|---------------------------|
+| C0 | Sob Pressão | Moderado-Alto | 391 (21.7%) | Sono baixo (0.35), tela alta (0.49), exercício moderado (0.60), estresse alto (0.54) |
+| C1 | Equilibrado | Baixo | 448 (24.9%) | Sono alto (0.71), exercício muito alto (0.70), estresse moderado (0.47) |
+| C2 | Rotina Saudável | Baixo-Moderado | 447 (24.8%) | Sono médio (0.52), exercício muito baixo (0.22), estresse baixo (0.33) |
+| C3 | Em Alerta | Alto | 514 (28.6%) | Sono médio-alto (0.63), exercício mínimo (0.23), estresse muito alto (0.66) |
+
+> Valores normalizados [0–1] via MinMaxScaler. Silhouette score: **0.123**.
+
+---
+
+## Pipeline de Mineração de Dados
+
+```
+data.csv (1.800 × 16 colunas — Kaggle)
+    ↓
+preprocessing.py
+    ├── EDA: distribuições, correlações, boxplots
+    ├── Qualidade: 0 nulos, 0 duplicatas, outliers MANTIDOS (dados reais válidos)
+    ├── Mapeamento:
+    │     PHQ9 (0–27) → nivelHumor (1–5) via escala clínica Kroenke et al. 2001
+    │     AcademicStress (0–10) → nivelEstresse (Baixo|Medio|Alto)
+    │     GPA (0–4) → desempenhoAcademico (Melhorou|Mesmo|Piorou)
+    │     AcademicStress > 7 → ansiedadeAntesProva (boolean)
+    ├── Seleção: 6 features (SleepHours, ScreenTime, ExerciseFreq, AcademicStress, PHQ9, GAD7)
+    └── Normalização: MinMaxScaler → [0, 1]
+    ↓
+dados_tratados.json → seed do banco PostgreSQL
+features_kmeans.csv → treinamento K-Means
+    ↓
+kmeans_clustering.py
+    ├── Validação K: cotovelo + silhouette → K=4
+    ├── Treinamento KMeans(n_clusters=4, random_state=42)
+    └── Visualizações: PCA 2D, radar, distribuição, heatmap centroides
+    ↓
+modelo_kmeans.pkl (8.4 KB) → mining-service Flask
+```
 
 ---
 
 ## Variáveis de ambiente
 
 ### backend/.env
-```
+```env
 PORT=3000
 NODE_ENV=development
 DATABASE_URL="postgresql://postgres:postgres123@localhost:5432/entrementes"
-JWT_SECRET=troque_esta_chave_por_algo_seguro
+JWT_SECRET=sua_chave_secreta_aqui
 JWT_EXPIRES_IN=7d
 GCP_PROJECT_ID=entrementes-pi
 GOOGLE_APPLICATION_CREDENTIALS=./gcp-credentials.json
 ```
 
 ### mining-service/.env
-```
-FLASK_ENV=development
+```env
 FLASK_PORT=5000
 GCP_PROJECT_ID=entrementes-pi
 GOOGLE_APPLICATION_CREDENTIALS=./gcp-credentials.json
@@ -500,43 +551,78 @@ GCP_TOPIC_RESULT=profile-classified
 
 ---
 
-## Regras importantes
+## Regras do projeto
 
-- NUNCA commitar .env com dados reais
-- NUNCA commitar gcp-credentials.json — está no .gitignore
-- NUNCA retornar passwordHash em resposta da API
-- NUNCA fazer diagnóstico psicológico
-- Sempre incluir disclaimer: "Este resultado não substitui acompanhamento profissional"
-- Commits descritivos em português
+- **NUNCA** commitar `.env` com dados reais
+- **NUNCA** commitar `gcp-credentials.json` (está no `.gitignore`)
+- **NUNCA** retornar `passwordHash` em resposta da API
+- **NUNCA** fazer diagnóstico psicológico — sempre usar disclaimer
+- Disclaimer obrigatório: *"Este resultado não substitui acompanhamento profissional de saúde mental"*
+- Commits em português, descritivos
 - Ambos os integrantes devem ter commits em todos os módulos
+- **NUNCA** commitar — o usuário sempre faz commit manualmente
 
 ---
 
 ## Estrutura de pastas
 
 ```
-backend/
-  src/
-    routes/       auth, mood, users, analytics
-    controllers/
-    services/     auth.service.js, mood.service.js, pubsub.service.js
-    middlewares/  auth.middleware.js, validate.middleware.js
-    swagger/
-  prisma/
-  gcp-credentials.json  ← no .gitignore
-  .env / server.js
-
-mining-service/
-  app.py
-  kmeans.py / classifier.py
-  pubsub_consumer.py
-  data/ / models/
-  gcp-credentials.json  ← no .gitignore
-  requirements.txt / .env
-
-mobile/
-  src/screens/ components/ services/ navigation/
-
-web/
-  src/pages/ components/ services/ context/
+EntreMentes/
+├── backend/
+│   ├── src/
+│   │   ├── routes/         auth.js, mood.js, users.js, analytics.js
+│   │   ├── controllers/
+│   │   ├── services/       auth.service.js, mood.service.js (pubsub.service.js — pendente)
+│   │   ├── middlewares/    auth.middleware.js
+│   │   └── lib/            prisma.js (singleton)
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   └── seed.js
+│   ├── server.js
+│   └── .env
+│
+├── web/
+│   └── src/
+│       ├── pages/          LoginPage, RegisterPage, DashboardPage, RegistroDiarioPage, HistoricoPage
+│       ├── components/     Input, Button, Sidebar
+│       ├── context/        AuthContext.jsx
+│       ├── services/       api.js
+│       ├── assets/         Circulo amarelo.png, Gradiente.jpg, EmailIcon.jsx, CadeadoIcon.jsx
+│       └── App.jsx / App.css / index.css
+│
+├── mobile/
+│   └── src/
+│       ├── screens/        LoginScreen, RegisterScreen, DashboardScreen,
+│       │                   RegistroDiarioScreen, HistoricoScreen
+│       ├── navigation/     AuthStack.js, AppTabs.js
+│       ├── components/     Input.js, Button.js
+│       ├── context/        AuthContext.js
+│       ├── services/       api.js
+│       ├── theme/          colors.js, fonts.js
+│       └── assets/         CadeadoIcon.js
+│
+├── data-analysis/
+│   ├── preprocessing.py    pipeline completo de pré-processamento
+│   ├── kmeans_clustering.py treinamento e validação do K-Means
+│   ├── data.csv            dataset bruto (Kaggle)
+│   ├── dados_tratados.json 1.800 registros formato Prisma
+│   ├── features_kmeans.csv 6 features normalizadas
+│   ├── modelo_kmeans.pkl   modelo serializado (8.4 KB)
+│   ├── graficos/           01–09 PNGs (EDA, normalização, clusters)
+│   └── README.md           documentação completa com gráficos
+│
+├── mining-service/         (a criar na Sprint 3)
+│   ├── app.py
+│   ├── classifier.py
+│   ├── pubsub_consumer.py
+│   └── requirements.txt
+│
+├── Documentação/
+│   ├── EntreMentes Documentação.pdf
+│   ├── EntreMentes_Sprint2_Doc.md
+│   ├── BD - Conceitual.jpeg
+│   ├── BD - Logico.jpeg
+│   └── Fluxo-do-Sistema.png
+│
+└── README.md
 ```
