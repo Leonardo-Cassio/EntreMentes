@@ -6,15 +6,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-const humorRoutes = require('./routes/humorRoutes');
-const moodRoutes = require('./routes/moodRoutes');
+const authRoutes      = require('./routes/authRoutes');
+const userRoutes      = require('./routes/userRoutes');
+const moodRoutes      = require('./routes/moodRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
-app.use('/auth', authRoutes);
-app.use('/users', userRoutes);
-app.use('/humor', humorRoutes);
-app.use('/mood', moodRoutes);
+app.use('/auth',      authRoutes);
+app.use('/users',     userRoutes);
+app.use('/mood',      moodRoutes);
+app.use('/analytics', analyticsRoutes);
 
 app.get('/', (req, res) => res.json({ success: true, message: "API EntreMentes OK" }));
 

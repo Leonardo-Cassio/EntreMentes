@@ -16,8 +16,10 @@ retomar exatamente de onde o anterior parou.
 
 ## Estado atual do desenvolvimento
 
-> **Última atualização:** 2026-05-12
+> **Última atualização:** 2026-05-12 (sessão noite)
 > **Sprint 2 apresentada com sucesso — sem objeções dos professores ✅**
+> **Mining Service Flask criado e testado ✅**
+> **GET /analytics/profile implementado ✅ | rota /humor duplicada removida ✅**
 
 ---
 
@@ -95,14 +97,17 @@ retomar exatamente de onde o anterior parou.
 
 ### Sprint 3 — Finalização 🚧 EM ANDAMENTO
 
-- [ ] Mining Service Python (Flask) — `/classify` endpoint carregando `modelo_kmeans.pkl`
-- [ ] Pub/Sub: publisher no backend (após `POST /mood`) + subscriber no mining-service
-- [ ] Endpoint `GET /analytics/profile` no backend (busca perfil classificado)
+- [x] Mining Service Python (Flask) — `POST /classify` + `GET /health` funcionando e testados
+- [ ] ~~Pub/Sub~~ — **EM QUARENTENA** (aguardando professor liberar GCP + instruções)
+- [x] Endpoint `GET /analytics/profile` no backend — retorna perfil completo com médias, insights, recomendações, metadados visuais
 - [ ] Conectar Dashboard (web e mobile) aos dados reais do banco
 - [ ] Conectar modal "Seu Perfil" ao `GET /analytics/profile` real (hoje usa mock)
+- [ ] Dashboard mobile: usar nome real do AuthContext (hoje hardcoded "João Silva")
+- [ ] Tela Humor mobile (hoje é placeholder — exibir modal de perfil comportamental)
 - [ ] Deploy Railway (backend + PostgreSQL)
-- [ ] Tela Humor mobile (hoje é placeholder — pode usar o modal de perfil)
-- [ ] Testes unitários e de integração
+- [ ] Documentação da API REST (OpenAPI/Swagger ou equivalente) — exigido Sprint 3
+- [ ] Vídeo demonstração (até 5 min, YouTube, todos os membros)
+- [ ] Relatório final do PI
 
 ---
 
@@ -149,7 +154,33 @@ mobile/src/screens/RegisterScreen.js        ← REDESENHADO: mesmo estilo, typew
 mobile/App.js                               ← animação fade+scale na troca AuthStack↔AppTabs
 ```
 
-### Sessão 12/05/2026 (atual)
+### Sessão 12/05/2026 — noite 3 (analytics A1 + A2)
+```
+backend/src/services/analyticsService.js    ← NOVO: getProfile() — query PerfilComportamental
+                                               + DefinicaoCluster, médias dos últimos 30
+                                               registros, metadados visuais por nomePerfil
+backend/src/controllers/analyticsController.js ← NOVO: GET /analytics/profile
+backend/src/routes/analyticsRoutes.js       ← NOVO: router.get('/profile', auth, ...)
+backend/src/server.js                       ← rota /analytics registrada; /humor removida (A2)
+```
+Shape de resposta: { nomePerfil, clusterId, nivelRisco, emoji, corRisco, bgRisco,
+justificativa, medias{duracaoSono,tempoTela,atividadeFisica}, insights[], recomendacoes[], geradoEm }
+Campo insights no DB armazena { insights:[...], recomendacoes:[...] } como Json único.
+404 retornado quando PerfilComportamental ainda não existe para o usuário.
+
+### Sessão 12/05/2026 — noite 2 (mining-service B1)
+```
+mining-service/app.py          ← NOVO: Flask, POST /classify, GET /health, validação de input
+mining-service/classifier.py   ← NOVO: carrega modelo_kmeans.pkl, mapeamento inverso app→model,
+                                        normalização manual MinMaxScaler, estimativa GAD7,
+                                        insights e recomendações por perfil
+mining-service/requirements.txt← NOVO: flask, flask-cors, scikit-learn, joblib, numpy, pandas
+mining-service/.env.example    ← NOVO: FLASK_PORT, FLASK_DEBUG, MODEL_PATH
+```
+Testado e validado: POST /classify retorna perfil correto ("Em Alerta" para dados de risco,
+"Equilibrado" para dados saudáveis). Validação de campos obrigatórios e enums funcionando.
+
+### Sessão 12/05/2026 — noite (redesign auth)
 ```
 --- WEB ---
 web/src/pages/DashboardPage.jsx             ← emoji humor → Modal confirmação → /registro
@@ -174,23 +205,19 @@ README.md                                   ← atualizado com tabela de telas e
 
 ## Pendências para próxima sessão
 
-1. **GCP / Pub/Sub** — aguardando professor liberar acesso ao Console. Quando liberado:
-   - Criar projeto `entrementes-pi`
-   - Criar tópicos: `mood-registered`, `profile-classified`
-   - Criar subscriptions: `mining-worker`, `profile-classified-backend`
-   - Criar service account, baixar `gcp-credentials.json`
+1. **GCP / Pub/Sub** — EM QUARENTENA. Aguardando professor fornecer instruções e acesso ao GCP Console.
 
-2. **Mining Service Flask** — criar `mining-service/app.py` com endpoint `/classify` que carrega `modelo_kmeans.pkl` e classifica novos registros
+2. **Modal "Seu Perfil" web** — trocar constante `PERFIL` mock por chamada real ao `GET /analytics/profile`. — **próxima task**
 
-3. **Endpoint `GET /analytics/profile`** — backend Node.js busca perfil do usuário em `BehavioralProfile` e retorna com insights e recomendações
+4. **Dashboard mobile** — corrigir `USUARIO = { nome: 'João Silva' }` hardcoded para usar o `useAuth()` context (nome real do usuário logado).
 
-4. **Modal "Seu Perfil" web** — trocar constante `PERFIL` mock por chamada real ao `GET /analytics/profile`
+5. **Dashboard web/mobile** — conectar gráficos de evolução ao `GET /mood` real (atualmente usa arrays estáticos).
 
-5. **Dashboard web/mobile** — conectar gráficos de evolução ao `GET /mood` real (atualmente usa arrays estáticos)
+6. **Tela Humor mobile** — exibir modal de perfil comportamental (mesmo conceito do web).
 
-6. **Tela Humor mobile** — hoje é placeholder. Pode receber o mesmo modal de perfil do web.
+7. **Deploy Railway** — backend + PostgreSQL em produção.
 
-7. **Deploy Railway** — backend + PostgreSQL em produção
+8. **Documentação da API REST** — exigida na Sprint 3 (OpenAPI/Swagger ou equivalente).
 
 ---
 
@@ -218,6 +245,18 @@ README.md                                   ← atualizado com tabela de telas e
 - Imagem `Circulo amarelo.png` (em `web/src/assets/`) substituiu o emoji 🟡
 - Dados mock na constante `PERFIL` em `DashboardPage.jsx` — shape exato do que `GET /analytics/profile` vai retornar. Quando o endpoint ficar pronto, basta substituir por `useState` + `useEffect`
 - Estrutura do mock: `{ nome, emoji, risco, corRisco, bgRisco, justificativa, dados[], insights[], recomendacoes[] }`
+
+### Mining Service — mapeamento inverso app → modelo
+
+O modelo K-Means foi treinado com features do dataset bruto (PHQ9, GAD7, SleepHours, etc.), mas o app armazena campos mapeados (nivelHumor 1-5, nivelEstresse Baixo/Medio/Alto). O `classifier.py` faz o mapeamento inverso:
+
+- `nivelHumor` → PHQ9: `{5:2, 4:7, 3:12, 2:17, 1:23}` (midpoints das faixas PHQ-9)
+- `nivelEstresse` → AcademicStress: `{Baixo:1.5, Medio:5.0, Alto:8.5}` (midpoints 0-3/4-6/7-10)
+- GAD7 estimado via `phq9 * (21/27)` + bônus de 4 se `ansiedadeAntesProva=True`
+- Normalização MinMaxScaler manual com ranges do domínio (PHQ9: 0-27, GAD7: 0-21, etc.)
+- `duracaoSono`, `tempoTela`, `atividadeFisica` são usados diretamente (mesmo campo, mesma escala)
+
+O MinMaxScaler original **não foi salvo** no pkl — só o KMeans. Por isso a normalização manual.
 
 ### Outliers mantidos no pré-processamento
 - Decisão consciente: valores extremos (3h de sono, 12h de tela) são dados reais de estudantes sob pressão
@@ -611,11 +650,11 @@ EntreMentes/
 │   ├── graficos/           01–09 PNGs (EDA, normalização, clusters)
 │   └── README.md           documentação completa com gráficos
 │
-├── mining-service/         (a criar na Sprint 3)
-│   ├── app.py
-│   ├── classifier.py
-│   ├── pubsub_consumer.py
-│   └── requirements.txt
+├── mining-service/         ✅ criado na Sprint 3
+│   ├── app.py              Flask: POST /classify, GET /health
+│   ├── classifier.py       lógica K-Means + mapeamento inverso + normalização
+│   ├── requirements.txt
+│   └── .env.example        (pubsub_consumer.py pendente — aguardando GCP)
 │
 ├── Documentação/
 │   ├── EntreMentes Documentação.pdf
