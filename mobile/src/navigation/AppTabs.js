@@ -8,19 +8,9 @@ import { fonts } from '../theme/fonts';
 import DashboardScreen      from '../screens/DashboardScreen';
 import RegistroDiarioScreen from '../screens/RegistroDiarioScreen';
 import HistoricoScreen      from '../screens/HistoricoScreen';
+import HumorScreen          from '../screens/HumorScreen';
 
 const Tab = createBottomTabNavigator();
-
-function TelaPlaceholder({ nome }) {
-  return (
-    <View style={s.placeholder}>
-      <Text style={s.placeholderText}>{nome}</Text>
-      <Text style={s.placeholderSub}>Em breve</Text>
-    </View>
-  );
-}
-
-const HumorScreen = () => <TelaPlaceholder nome="Humor" />;
 
 function PerfilScreen() {
   const { user, logout } = useAuth();

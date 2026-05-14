@@ -1,20 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Dimensions, StatusBar, Modal,
+  StyleSheet, Dimensions, StatusBar, Modal, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Svg, Polyline, Path, Rect, Line, Text as SvgText } from 'react-native-svg';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_PADDING = 16;
 const OUTER_PADDING = 20;
 const CHART_WIDTH = SCREEN_WIDTH - OUTER_PADDING * 2 - CARD_PADDING * 2;
 
-// ── Dados estáticos (mock) ───────────────────────────────────────────────
-const USUARIO = { nome: 'João Silva', iniciais: 'JS' };
+// ── Helpers para transformar dados da API ────────────────────────────────
+
+function calcularHumorMedio(registros) {
+  if (!registros.length) return '—';
+  const media = registros.reduce((s, r) => s + r.nivelHumor, 0) / registros.length;
+  return media.toFixed(1);
+}
+
+function calcularDiasRegistrados(registros) {
+  return new Set(registros.map(r => new Date(r.createdAt).toDateString())).size;
+}
+
+function calcularSequencia(registros) {
+  if (!registros.length) return 0;
+  const dias = [...new Set(
+    registros.map(r => {
+      const d = new Date(r.createdAt);
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    }),
+  )].sort((a, b) => b - a);
+
+  const hoje = (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); })();
+  const ontem = hoje - 86400000;
+  if (dias[0] !== hoje && dias[0] !== ontem) return 0;
+
+  let seq = 1;
+  for (let i = 1; i < dias.length; i++) {
+    if (dias[i] === dias[i - 1] - 86400000) seq++;
+    else break;
+  }
+  return seq;
+}
+
+// Retorna array de números para o GraficoLinha
+function transformarDadosLinha(registros) {
+  const sorted = [...registros].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  return sorted.slice(-30).map(r => r.nivelHumor);
+}
+
+// Retorna { dia, valor }[] para o GraficoBarra
+function transformarDadosBarra(registros) {
+  const nomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const soma = Array(7).fill(0);
+  const count = Array(7).fill(0);
+  registros.forEach(r => {
+    const dow = new Date(r.createdAt).getDay();
+    soma[dow] += r.nivelHumor;
+    count[dow]++;
+  });
+  return [1, 2, 3, 4, 5, 6, 0].map(dow => ({
+    dia: nomes[dow],
+    valor: count[dow] > 0 ? parseFloat((soma[dow] / count[dow]).toFixed(1)) : 0,
+  }));
+}
 
 const EMOJIS = [
   { nivel: 1, emoji: '😢', label: 'Muito Ruim' },
@@ -161,9 +215,30 @@ function GraficoBarra({ dados }) {
 
 // ── Tela principal ───────────────────────────────────────────────────────
 export default function DashboardScreen({ navigation }) {
+  const { user, token } = useAuth();
   const [humorSelecionado, setHumorSelecionado] = useState(null);
-  const [modalVisivel, setModalVisivel] = useState(false);
-  const primeroNome = USUARIO.nome.split(' ')[0];
+  const [modalVisivel, setModalVisivel]         = useState(false);
+  const [registros, setRegistros]               = useState([]);
+  const [loadingRegistros, setLoadingRegistros] = useState(true);
+
+  useEffect(() => {
+    if (!token) { setLoadingRegistros(false); return; }
+    api.listRegistros(token)
+      .then(res => { if (res.success) setRegistros(res.data ?? []); })
+      .catch(() => {})
+      .finally(() => setLoadingRegistros(false));
+  }, [token]);
+
+  // Dados derivados dos registros reais
+  const primeroNome      = user?.name?.split(' ')[0] ?? 'Usuário';
+  const iniciais         = user?.name
+    ? user.name.split(' ').slice(0, 2).map(p => p[0].toUpperCase()).join('')
+    : 'US';
+  const humorMedio       = calcularHumorMedio(registros);
+  const diasRegistrados  = calcularDiasRegistrados(registros);
+  const sequencia        = calcularSequencia(registros);
+  const dadosLinha       = transformarDadosLinha(registros);
+  const dadosBarra       = transformarDadosBarra(registros);
 
   const humorAtual = EMOJIS.find(e => e.nivel === humorSelecionado);
 
@@ -185,7 +260,7 @@ export default function DashboardScreen({ navigation }) {
       <View style={s.header}>
         <Text style={s.headerLogo}>EntreMentes</Text>
         <View style={s.avatar}>
-          <Text style={s.avatarText}>{USUARIO.iniciais}</Text>
+          <Text style={s.avatarText}>{iniciais}</Text>
         </View>
       </View>
 
@@ -246,29 +321,29 @@ export default function DashboardScreen({ navigation }) {
           <View style={s.metricaCard}>
             <Text style={s.metricaLabel}>Humor Médio</Text>
             <View style={s.metricaValorRow}>
-              <Text style={s.metricaValor}>3.8</Text>
-              <Text style={s.metricaSeta}>↑</Text>
+              <Text style={s.metricaValor}>{loadingRegistros ? '…' : humorMedio}</Text>
+              {!loadingRegistros && registros.length > 0 && <Text style={s.metricaSeta}>↑</Text>}
             </View>
           </View>
           <View style={s.metricaCard}>
             <Text style={s.metricaLabel}>Dias Registrados</Text>
             <View style={s.metricaValorRow}>
-              <Text style={s.metricaValor}>23</Text>
+              <Text style={s.metricaValor}>{loadingRegistros ? '…' : diasRegistrados}</Text>
               <Text style={s.metricaIcone}>📅</Text>
             </View>
           </View>
           <View style={s.metricaCard}>
             <Text style={s.metricaLabel}>Sequência Atual</Text>
             <View style={s.metricaValorRow}>
-              <Text style={s.metricaValor}>7 dias</Text>
+              <Text style={s.metricaValor}>{loadingRegistros ? '…' : `${sequencia} dia${sequencia !== 1 ? 's' : ''}`}</Text>
               <Text style={s.metricaIcone}>🔥</Text>
             </View>
           </View>
           <View style={s.metricaCard}>
             <Text style={s.metricaLabel}>Seu Perfil</Text>
             <View style={s.metricaValorRow}>
-              <Text style={s.metricaIcone}>🟡</Text>
-              <Text style={s.metricaValorPerfil}>Moderado</Text>
+              <Text style={s.metricaIcone}>🧠</Text>
+              <Text style={s.metricaValorPerfil}>Ver Humor</Text>
             </View>
           </View>
         </View>
@@ -276,21 +351,43 @@ export default function DashboardScreen({ navigation }) {
         {/* Gráfico de linha */}
         <View style={s.chartCard}>
           <Text style={s.chartTitulo}>Evolução do Humor</Text>
-          <GraficoLinha dados={DADOS_LINHA} />
+          {loadingRegistros ? (
+            <ActivityIndicator color={colors.primary} style={{ paddingVertical: 60 }} />
+          ) : dadosLinha.length >= 2 ? (
+            <GraficoLinha dados={dadosLinha} />
+          ) : (
+            <Text style={s.chartVazio}>Adicione registros para ver a evolução</Text>
+          )}
         </View>
 
         {/* Gráfico de barras */}
         <View style={s.chartCard}>
           <Text style={s.chartTitulo}>Humor por Dia da Semana</Text>
-          <GraficoBarra dados={DADOS_BARRA} />
+          {loadingRegistros ? (
+            <ActivityIndicator color={colors.primary} style={{ paddingVertical: 60 }} />
+          ) : (
+            <GraficoBarra dados={dadosBarra} />
+          )}
         </View>
 
         {/* Última avaliação */}
         <View style={s.avaliacaoCard}>
           <Text style={s.avaliacaoTitulo}>Última Avaliação de Bem-Estar</Text>
-          <Text style={s.avaliacaoData}>Respondido em 15 de março de 2026</Text>
-          <TouchableOpacity style={s.avaliacaoBtn} activeOpacity={0.85}>
-            <Text style={s.avaliacaoBtnText}>Responder novamente</Text>
+          <Text style={s.avaliacaoData}>
+            {loadingRegistros
+              ? 'Carregando…'
+              : registros.length > 0
+                ? `Respondido em ${new Date(registros[0].createdAt).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                : 'Nenhum registro ainda'}
+          </Text>
+          <TouchableOpacity
+            style={s.avaliacaoBtn}
+            onPress={() => navigation.navigate('Diário')}
+            activeOpacity={0.85}
+          >
+            <Text style={s.avaliacaoBtnText}>
+              {registros.length > 0 ? 'Responder novamente' : 'Fazer primeiro registro'}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -442,6 +539,12 @@ const s = StyleSheet.create({
     fontSize: fonts.sizes.sm,
     fontWeight: fonts.weights.bold,
     color: colors.text,
+  },
+  chartVazio: {
+    fontSize: fonts.sizes.sm,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    paddingVertical: 48,
   },
 
   // Modal

@@ -38,4 +38,9 @@ export const api = {
     request('/mood', {
       headers: { Authorization: `Bearer ${token}` },
     }),
+
+  getProfile: (token) =>
+    request('/analytics/profile', {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
 };

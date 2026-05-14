@@ -16,10 +16,11 @@ retomar exatamente de onde o anterior parou.
 
 ## Estado atual do desenvolvimento
 
-> **Última atualização:** 2026-05-12 (sessão noite)
+> **Última atualização:** 2026-05-13 (sessão completa)
 > **Sprint 2 apresentada com sucesso — sem objeções dos professores ✅**
-> **Mining Service Flask criado e testado ✅**
-> **GET /analytics/profile implementado ✅ | rota /humor duplicada removida ✅**
+> **Sprint 3 em andamento — todo o Bloco C frontend concluído ✅**
+> **Integração mining-service ↔ backend sem Pub/Sub implementada ✅**
+> **Comentários data-analysis aprimorados para apresentação ✅**
 
 ---
 
@@ -97,13 +98,26 @@ retomar exatamente de onde o anterior parou.
 
 ### Sprint 3 — Finalização 🚧 EM ANDAMENTO
 
+**Backend**
 - [x] Mining Service Python (Flask) — `POST /classify` + `GET /health` funcionando e testados
 - [ ] ~~Pub/Sub~~ — **EM QUARENTENA** (aguardando professor liberar GCP + instruções)
-- [x] Endpoint `GET /analytics/profile` no backend — retorna perfil completo com médias, insights, recomendações, metadados visuais
-- [ ] Conectar Dashboard (web e mobile) aos dados reais do banco
-- [ ] Conectar modal "Seu Perfil" ao `GET /analytics/profile` real (hoje usa mock)
-- [ ] Dashboard mobile: usar nome real do AuthContext (hoje hardcoded "João Silva")
-- [ ] Tela Humor mobile (hoje é placeholder — exibir modal de perfil comportamental)
+- [x] Endpoint `GET /analytics/profile` no backend
+- [x] Integração direta backend → mining-service via `classifyService.js` (substitui Pub/Sub enquanto GCP não é liberado)
+- [x] `DefinicaoCluster` populada automaticamente na primeira classificação; script `seedClusters.js` para pré-popular
+- [x] `POST /mood` agora dispara classificação assíncrona (fire-and-forget) após salvar o registro
+
+**Frontend — Bloco C**
+- [x] **C1** Dashboard mobile: nome e iniciais do avatar via `useAuth()` (removido hardcoded "João Silva")
+- [x] **C2** Dashboard web e mobile: gráficos e métricas conectados ao `GET /mood` real — humor médio, dias registrados, sequência atual, evolução por dia e por dia da semana
+- [x] **C2+** Card "Última Avaliação de Bem-Estar": data dinâmica do último registro (web e mobile), botão adaptativo
+- [x] **C3** Modal "Seu Perfil" web: conectado ao `GET /analytics/profile` real — 3 estados (loading spinner, sem perfil, perfil completo com emoji, risco, médias, insights, recomendações)
+- [x] **C4** Tela Humor mobile: `HumorScreen.js` criada — header LinearGradient, pills de médias, insights, recomendações, pull-to-refresh, 3 estados (loading, sem perfil, perfil completo)
+
+**Data Analysis**
+- [x] Comentários de `preprocessing.py` aprimorados para apresentação (cada etapa explica o "porquê" técnico)
+- [x] Comentários de `kmeans_clustering.py` aprimorados (cotovelo, silhouette, k-means++, rotulagem, radar chart)
+
+**Pendente**
 - [ ] Deploy Railway (backend + PostgreSQL)
 - [ ] Documentação da API REST (OpenAPI/Swagger ou equivalente) — exigido Sprint 3
 - [ ] Vídeo demonstração (até 5 min, YouTube, todos os membros)
@@ -152,6 +166,39 @@ web/src/components/Button.css               ← variante .btn-dark (preto, pill)
 mobile/src/screens/LoginScreen.js           ← REDESENHADO: LinearGradient + card branco
 mobile/src/screens/RegisterScreen.js        ← REDESENHADO: mesmo estilo, typewriter 3s
 mobile/App.js                               ← animação fade+scale na troca AuthStack↔AppTabs
+```
+
+### Sessão 13/05/2026 — tarde 2 (integração classify sem Pub/Sub)
+```
+backend/src/services/classifyService.js     ← NOVO: chama POST /classify do mining-service após
+                                               cada registro de humor e faz upsert em
+                                               PerfilComportamental (alternativa ao Pub/Sub)
+backend/src/controllers/moodController.js   ← create() dispara classificarEAtualizar() de forma
+                                               assíncrona (fire-and-forget, não bloqueia resposta)
+backend/prisma/seedClusters.js              ← NOVO: popula DefinicaoCluster com os 4 perfis K-Means
+backend/.env                                ← MINING_SERVICE_URL=http://localhost:5000 adicionado
+```
+Fluxo sem GCP: POST /mood → salva no banco → responde 200 → (async) chama mining-service →
+upsert DefinicaoCluster se necessário → upsert PerfilComportamental.
+Requisito: mining-service deve estar rodando em localhost:5000 (python app.py).
+
+### Sessão 13/05/2026 — tarde (Bloco C frontend)
+```
+web/src/services/api.js                     ← getProfile() adicionado
+mobile/src/services/api.js                  ← getProfile() adicionado
+mobile/src/screens/DashboardScreen.js       ← C1: nome real do AuthContext (iniciais dinâmicas)
+                                               C2: fetch GET /mood, helpers de transformação,
+                                               métricas reais, gráficos com loading state
+web/src/pages/DashboardPage.jsx             ← C2: gráficos/métricas conectados ao GET /mood real
+                                               C3: modal perfil conectado ao GET /analytics/profile
+                                               (3 estados: loading spinner, sem perfil, perfil completo)
+                                               saudação usa nome real do AuthContext
+web/src/pages/DashboardPage.css             ← estilos de loading (spinner, chart-loading)
+mobile/src/screens/HumorScreen.js          ← C4: NOVA TELA — perfil comportamental completo
+                                               (header LinearGradient, pills de médias, insights,
+                                               recomendações, pull-to-refresh, 3 estados)
+mobile/src/navigation/AppTabs.js           ← C4: importa HumorScreen real (remove placeholder)
+.github/copilot-instructions.md            ← atualizado com todas as tarefas C concluídas
 ```
 
 ### Sessão 12/05/2026 — noite 3 (analytics A1 + A2)
@@ -207,17 +254,13 @@ README.md                                   ← atualizado com tabela de telas e
 
 1. **GCP / Pub/Sub** — EM QUARENTENA. Aguardando professor fornecer instruções e acesso ao GCP Console.
 
-2. **Modal "Seu Perfil" web** — trocar constante `PERFIL` mock por chamada real ao `GET /analytics/profile`. — **próxima task**
+2. **Deploy Railway** — backend + PostgreSQL em produção.
 
-4. **Dashboard mobile** — corrigir `USUARIO = { nome: 'João Silva' }` hardcoded para usar o `useAuth()` context (nome real do usuário logado).
+3. **Documentação da API REST** — exigida na Sprint 3 (OpenAPI/Swagger ou equivalente).
 
-5. **Dashboard web/mobile** — conectar gráficos de evolução ao `GET /mood` real (atualmente usa arrays estáticos).
+4. **Vídeo demonstração** — até 5 min, YouTube, com presença dos dois integrantes.
 
-6. **Tela Humor mobile** — exibir modal de perfil comportamental (mesmo conceito do web).
-
-7. **Deploy Railway** — backend + PostgreSQL em produção.
-
-8. **Documentação da API REST** — exigida na Sprint 3 (OpenAPI/Swagger ou equivalente).
+5. **Relatório final do PI**.
 
 ---
 
@@ -241,10 +284,11 @@ README.md                                   ← atualizado com tabela de telas e
 
 ### Modal de Perfil Comportamental (web)
 - Ativado pelo card "Seu Perfil" no Dashboard
-- Header com gradiente idêntico ao da auth (`#7B2FBE → #4A90D9`)
-- Imagem `Circulo amarelo.png` (em `web/src/assets/`) substituiu o emoji 🟡
-- Dados mock na constante `PERFIL` em `DashboardPage.jsx` — shape exato do que `GET /analytics/profile` vai retornar. Quando o endpoint ficar pronto, basta substituir por `useState` + `useEffect`
-- Estrutura do mock: `{ nome, emoji, risco, corRisco, bgRisco, justificativa, dados[], insights[], recomendacoes[] }`
+- Header com o emoji do perfil (campo `perfil.emoji` retornado pela API), nome do perfil e badge de risco com cor dinâmica
+- Conectado ao `GET /analytics/profile` via `useState` + `useEffect` em `DashboardPage.jsx`
+- 3 estados de renderização: loading spinner | sem perfil (botão → /registro) | perfil completo
+- Shape da resposta: `{ nomePerfil, emoji, nivelRisco, corRisco, bgRisco, justificativa, medias{duracaoSono,tempoTela,atividadeFisica}, insights[], recomendacoes[], geradoEm }`
+- `buildDadosPerfil(medias)` transforma as médias em pills com valor + referência ideal (sono: 7–9h, tela: < 6h, exercício: > 4h)
 
 ### Mining Service — mapeamento inverso app → modelo
 
@@ -329,7 +373,7 @@ Comunicação entre serviços: HTTP/REST para operações síncronas + Google Cl
 |------|------|--------|----------|
 | Login | `/login` | ✅ | Split-screen: form esquerda / gradiente direita. Typewriter "Olá!" 2s. Botão dark pill. |
 | Cadastro | `/register` | ✅ | Espelhado: gradiente esquerda / form direita. Typewriter "Seja bem-vindo!" 3s. |
-| Dashboard | `/dashboard` | ✅ | Métricas mock, gráficos Recharts, seletor humor com modal, card perfil clicável com modal detalhado |
+| Dashboard | `/dashboard` | ✅ | Métricas e gráficos reais (GET /mood), seletor humor com modal, card perfil clicável com modal conectado ao GET /analytics/profile (3 estados), data dinâmica da última avaliação |
 | Registro Diário | `/registro` | ✅ | Sliders, seleções, barra progresso, POST /mood. Recebe nivelHumorInicial via Router state. |
 | Histórico | `/historico` | ✅ | Cards expansíveis, GET /mood integrado |
 
@@ -339,11 +383,11 @@ Comunicação entre serviços: HTTP/REST para operações síncronas + Google Cl
 |------|-----|--------|----------|
 | Login | — | ✅ | LinearGradient fundo, card branco centralizado, typewriter 2s, slide-up ao montar |
 | Cadastro | — | ✅ | Mesmo estilo login, typewriter 3s, 4 campos |
-| Dashboard | Dashboard | ✅ | Métricas mock, seletor humor com Modal nativo, navega para Diário com param |
+| Dashboard | Dashboard | ✅ | Métricas e gráficos reais (GET /mood), nome real do AuthContext, seletor humor com Modal nativo, data dinâmica da última avaliação, navega para Diário com param |
 | Registro Diário | Diário | ✅ | Sliders, emojis, progresso, POST /mood. Recebe nivelHumorInicial via route.params. |
 | Histórico | Histórico | ✅ | FlatList, cards expansíveis, GET /mood integrado |
 | Perfil | Perfil | ✅ | Nome, email, botão logout |
-| Humor | Humor | 🔜 | Placeholder — Sprint 3 (candidato a exibir modal de perfil IA) |
+| Humor | Humor | ✅ | Perfil comportamental completo: header LinearGradient, pills de médias, insights, recomendações, pull-to-refresh, 3 estados (loading, sem perfil, perfil completo) |
 
 ---
 
@@ -382,8 +426,8 @@ Modal abre com:
   - Recomendações (fundo azul)
   - Disclaimer "não substitui acompanhamento profissional"
          ↓
-Dados: hoje mock (constante PERFIL em DashboardPage.jsx)
-Futuramente: GET /analytics/profile
+Dados: GET /analytics/profile (real, Sprint 3)
+Requisito: mining-service rodando + ao menos 1 registro de humor salvo (dispara classificação via classifyService.js)
 ```
 
 ---

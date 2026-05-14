@@ -1,9 +1,14 @@
-const moodService = require('../services/moodService');
+const moodService     = require('../services/moodService');
+const classifyService = require('../services/classifyService');
 
 exports.create = async (req, res) => {
   try {
     const entry = await moodService.create(req.userId, req.body);
     res.status(201).json({ success: true, data: entry, message: "Registro de humor criado com sucesso" });
+
+    // Classificação assíncrona — não bloqueia a resposta ao usuário.
+    // Substitui o Pub/Sub enquanto o acesso ao GCP não é liberado.
+    classifyService.classificarEAtualizar(req.userId, req.body);
   } catch (err) {
     res.status(400).json({ success: false, data: null, message: err.message });
   }

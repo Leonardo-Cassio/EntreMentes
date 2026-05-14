@@ -43,6 +43,15 @@ CORES_CLUSTER = ['#6C5CE7', '#00B894', '#FDCB6E', '#E74C3C']
 # =============================================================================
 # ETAPA 1 — CARREGAMENTO DAS FEATURES
 # =============================================================================
+# Lemos o features_kmeans.csv gerado pelo preprocessing.py e separamos
+# automaticamente as colunas normalizadas (sufixo "_norm") das originais.
+#
+# Por que usar só as colunas "_norm"?
+#   O array X que entra no K-Means deve conter apenas valores em [0, 1].
+#   As colunas originais (sem sufixo) ficam no DataFrame apenas para uso
+#   na análise dos centroides (Etapa 4) e nos relatórios — onde valores
+#   como "PHQ9 médio = 18.3" são mais legíveis que "PHQ9_norm = 0.68".
+# =============================================================================
 
 print("=" * 65)
 print("  EntreMentes — K-Means Clustering (K=4)")
@@ -63,14 +72,34 @@ print(f"     Features  : {X.shape[1]} → {COLS_ORIG}")
 os.makedirs('graficos', exist_ok=True)
 
 # =============================================================================
-# ETAPA 2 — MÉTODO DO COTOVELO + SILHOUETTE (validação de K)
+# ETAPA 2 — VALIDAÇÃO DO K: MÉTODO DO COTOVELO + SILHOUETTE SCORE
 # =============================================================================
-# O Método do Cotovelo plota a inércia (WCSS) para cada K.
-# O "cotovelo" indica o K ótimo — a partir daí, adicionar clusters
-# traz ganho marginal de explicação.
+# K-Means exige que o número de clusters (K) seja definido antes do
+# treinamento. Esta etapa testa K de 2 a 9 para justificar a escolha de K=4
+# com evidência quantitativa, usando dois critérios complementares:
 #
-# A Silhouette Score mede quão coeso é cada cluster em relação aos
-# vizinhos (-1 a +1; quanto mais próximo de 1, melhor).
+#   Método do Cotovelo (Elbow Method)
+#     Plota a inércia (WCSS — Within-Cluster Sum of Squares) para cada K.
+#     A inércia mede a soma das distâncias quadradas de cada ponto ao
+#     centroide do seu cluster. Ela sempre cai conforme K aumenta (com K=N,
+#     inércia = 0), então buscamos o "cotovelo" — ponto onde a queda
+#     desacelera abruptamente. A partir daí, clusters adicionais fragmentam
+#     grupos coesos sem ganho real de explicação.
+#
+#   Silhouette Score
+#     Para cada amostra, compara a distância média ao próprio cluster (a)
+#     com a distância média ao cluster vizinho mais próximo (b):
+#       silhouette = (b - a) / max(a, b)
+#     Varia de -1 (amostra no cluster errado) a +1 (amostra bem posicionada).
+#     A média de todas as amostras dá o score do K. Buscamos o K com
+#     silhouette alto E que coincida com o cotovelo.
+#
+#   Por que K=4?
+#     O cotovelo da curva de inércia cai bruscamente até K=4 e suaviza
+#     depois. K=4 também oferece silhouette aceitável (> 0.30) e produz
+#     4 perfis clinicamente interpretáveis. Mais clusters fragmentariam
+#     perfis que são naturalmente contínuos; menos clusters perderiam
+#     a distinção entre "Equilibrado" e "Rotina Saudável".
 # =============================================================================
 
 print("\n\n" + "=" * 65)
@@ -131,9 +160,26 @@ print("\n[OK] Gráfico 6 salvo: graficos/06_elbow_silhouette.png")
 # =============================================================================
 # ETAPA 3 — TREINAMENTO FINAL COM K=4
 # =============================================================================
-# Usamos k-means++ para inicialização inteligente dos centroides,
-# reduzindo a sensibilidade ao ponto de partida aleatório.
-# n_init=20 roda 20 inicializações independentes, retornando a melhor.
+# Com K=4 validado na etapa anterior, treinamos o modelo definitivo.
+#
+#   init='k-means++'
+#     O K-Means padrão sorteia centroides iniciais aleatoriamente, o que
+#     pode levar a mínimos locais ruins (clusters muito desiguais).
+#     O k-means++ seleciona o primeiro centroide aleatoriamente e depois
+#     escolhe os seguintes com probabilidade proporcional à distância ao
+#     centroide mais próximo já escolhido — forçando diversidade inicial.
+#     Resultado: convergência mais rápida e clusters mais estáveis.
+#
+#   n_init=20
+#     Mesmo com k-means++, a aleatoriedade do primeiro centroide pode
+#     produzir resultados ligeiramente diferentes a cada execução.
+#     n_init=20 roda 20 inicializações independentes e retorna a solução
+#     com menor inércia — eliminando variação de uma única execução.
+#
+#   random_state=42
+#     Fixa a semente do gerador aleatório para reproducibilidade total.
+#     Garante que qualquer pessoa que executar o script obtenha exatamente
+#     os mesmos clusters, essencial para validação e comparação de resultados.
 # =============================================================================
 
 print("\n\n" + "=" * 65)
@@ -159,21 +205,29 @@ for c, n in contagem.items():
 # =============================================================================
 # ETAPA 4 — ROTULAGEM DOS PERFIS COMPORTAMENTAIS
 # =============================================================================
-# Analisamos os centroides para nomear cada cluster com um perfil
-# clínico-educacional. A lógica:
+# O K-Means devolve clusters numerados (0, 1, 2, 3) sem significado semântico.
+# Esta etapa analisa os centroides para traduzir cada número em um perfil
+# clínico-educacional interpretável por usuários e profissionais de saúde.
 #
-#   - Humor / bem-estar  → determinado por PHQ9_norm e GAD7_norm (quanto
-#     MAIOR a normalização, PIOR o estado — PHQ9 e GAD7 medem sintomas)
-#   - Sono               → SleepHours_norm (quanto MAIOR, melhor)
-#   - Exercício          → ExerciseFreq_norm (quanto MAIOR, melhor)
-#   - Estresse           → AcademicStress_norm (quanto MAIOR, pior)
-#   - Tela               → ScreenTime_norm (quanto MAIOR, pior)
+# Atenção à direção das features normalizadas:
+#   - SleepHours_norm e ExerciseFreq_norm: valor ALTO = situação BOA
+#   - PHQ9_norm, GAD7_norm, AcademicStress_norm, ScreenTime_norm:
+#     valor ALTO = situação RUIM (medem sintomas ou fatores de risco)
 #
-# Perfis esperados (baseados na literatura de saúde mental estudantil):
-#   "Equilibrado"          — bom sono, baixo estresse, baixo PHQ9/GAD7
-#   "Sob Pressão"          — alto estresse, PHQ9/GAD7 elevados, pouco exercício
-#   "Em Alerta"            — PHQ9/GAD7 muito altos, sono irregular
-#   "Rotina Saudável"      — exercício regular, sono adequado, tela controlada
+# Heurística de bem-estar usada para ordenar os clusters:
+#   score = sono + exercício - estresse - PHQ9 - GAD7 - (tela × 0.5)
+#   O peso 0.5 para tela reflete que tempo de tela tem impacto mais indireto
+#   na saúde mental do que estresse ou sintomas depressivos.
+#
+# O cluster com maior score recebe o perfil mais saudável ("Equilibrado"),
+# e o com menor score recebe o mais crítico ("Em Alerta"). Os dois
+# intermediários são ordenados pelo mesmo critério.
+#
+# Perfis atribuídos:
+#   "Equilibrado"     → bom sono, baixo estresse, PHQ9/GAD7 baixos
+#   "Rotina Saudável" → exercício regular, sono adequado, tela controlada
+#   "Sob Pressão"     → alto estresse, PHQ9/GAD7 elevados, pouco exercício
+#   "Em Alerta"       → PHQ9/GAD7 muito altos, sono irregular, alta tela
 # =============================================================================
 
 print("\n\n" + "=" * 65)
@@ -222,7 +276,30 @@ for idx, score in ranking.items():
 df['perfil'] = df['cluster'].map(lambda c: NOMES_PERFIL[c][0])
 
 # =============================================================================
-# ETAPA 5 — VISUALIZAÇÕES
+# ETAPA 5 — VISUALIZAÇÕES DOS CLUSTERS
+# =============================================================================
+# Quatro gráficos complementares para validar e comunicar os resultados.
+# Cada um responde uma pergunta diferente:
+#
+#   Gráfico 7 — Scatter PCA 2D
+#     O K-Means opera em 6 dimensões — impossível visualizar diretamente.
+#     O PCA (Principal Component Analysis) reduz as 6 features para 2
+#     componentes principais que capturam o máximo de variância possível.
+#     O scatter resultante mostra se os clusters são visualmente separáveis:
+#     nuvens bem distintas indicam agrupamento de qualidade.
+#     Os centroides aparecem como estrelas para facilitar a identificação.
+#
+#   Gráfico 8 — Radar Chart (um por cluster)
+#     Mostra o perfil de cada cluster em todas as 6 dimensões simultaneamente.
+#     Atenção: PHQ9, GAD7, AcademicStress e ScreenTime são invertidos
+#     (1 - valor_norm) para que o radar sempre leia "maior = melhor".
+#     Isso torna a comparação visual intuitiva: área maior = mais saudável.
+#
+#   Gráfico 9 — Distribuição + Heatmap de centroides
+#     O gráfico de barras mostra quantos estudantes caíram em cada perfil,
+#     revelando se os clusters são equilibrados ou muito assimétricos.
+#     O heatmap mostra os valores normalizados de cada centroide por feature,
+#     permitindo comparar os perfis coluna a coluna (vermelho = alto, verde = baixo).
 # =============================================================================
 
 print("\n\n" + "=" * 65)
@@ -364,6 +441,15 @@ print("[OK] Gráfico 9 salvo: graficos/09_distribuicao_clusters.png")
 # =============================================================================
 # ETAPA 6 — ANÁLISE DETALHADA DOS PERFIS
 # =============================================================================
+# Para cada cluster, calculamos média, mínimo e máximo das features originais
+# (não normalizadas) — tornando os números interpretáveis clinicamente.
+# Exemplo: "Cluster Em Alerta tem PHQ9 médio de 22.1" é mais comunicativo
+# do que "PHQ9_norm médio de 0.82".
+#
+# Esta análise também valida se os perfis fazem sentido clínico:
+# o cluster "Equilibrado" deve ter SleepHours altas e PHQ9/GAD7 baixos;
+# o "Em Alerta" deve ter o padrão inverso.
+# =============================================================================
 
 print("\n\n" + "=" * 65)
 print("  ETAPA 6 — Análise Detalhada dos Perfis")
@@ -383,11 +469,27 @@ for c in range(4):
         print(f"  {col:<20} {media:>8.2f}  {minv:>6.1f}  {maxv:>6.1f}")
 
 # =============================================================================
-# ETAPA 7 — SALVAR MODELO
+# ETAPA 7 — SERIALIZAÇÃO DO MODELO (modelo_kmeans.pkl)
 # =============================================================================
-# Salvamos um dicionário com o modelo K-Means treinado + metadados dos perfis.
-# O mining-service Flask pode carregar esse arquivo com joblib.load()
-# e classificar novos estudantes em tempo real.
+# Salvamos um dicionário Python contendo o modelo treinado e seus metadados
+# usando joblib — biblioteca otimizada para serialização de objetos NumPy/sklearn.
+#
+# O dicionário inclui:
+#   'modelo'     → o objeto KMeans treinado com os 4 centroides finais.
+#                  Em produção: modelo.predict([vetor_norm]) retorna o cluster.
+#   'features'   → ordem exata das features que o modelo espera como entrada.
+#                  Garantia de que o mining-service monta o vetor corretamente.
+#   'cols_norm'  → nomes das colunas normalizadas (para o predict no Flask).
+#   'perfis'     → mapeamento cluster_id → {nome, cor} para montar a resposta
+#                  da API sem hardcoding no backend.
+#   'silhouette' → métrica de qualidade do modelo, documentada no artefato.
+#   'inercia'    → inércia final, para referência de performance.
+#   'n_amostras' → tamanho do conjunto de treino.
+#
+# Em produção (mining-service Flask):
+#   artefato = joblib.load('modelo_kmeans.pkl')
+#   cluster  = artefato['modelo'].predict([vetor_normalizado])[0]
+#   perfil   = artefato['perfis'][cluster]['nome']
 # =============================================================================
 
 print("\n\n" + "=" * 65)

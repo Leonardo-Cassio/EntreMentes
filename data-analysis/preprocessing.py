@@ -48,8 +48,17 @@ plt.rcParams['figure.dpi'] = 100
 # =============================================================================
 # ETAPA 1 — CARREGAMENTO DOS DADOS
 # =============================================================================
-# Lemos o CSV com pandas e fazemos uma inspeção inicial para entender
-# a estrutura, os tipos de cada coluna e o volume de dados disponíveis.
+# Lemos o CSV bruto com pandas e realizamos uma inspeção inicial obrigatória:
+#
+#   - df.shape   → confirma que as 1.800 linhas e 16 colunas foram lidas
+#                  integralmente, sem truncamento silencioso.
+#   - df.dtypes  → verifica se o pandas inferiu os tipos corretamente
+#                  (ex.: PHQ9 como int64, GPA como float64). Tipos errados
+#                  causam falhas silenciosas nas etapas de normalização.
+#   - df.head()  → amostra visual para detectar problemas de encoding,
+#                  separador incorreto ou colunas deslocadas.
+#
+# Esta etapa não transforma nada — é apenas diagnóstico de entrada.
 # =============================================================================
 
 print("=" * 65)
@@ -70,9 +79,32 @@ print(df.head(3).to_string())
 # =============================================================================
 # ETAPA 2 — ANÁLISE EXPLORATÓRIA (EDA)
 # =============================================================================
-# Antes de qualquer transformação, entendemos a distribuição estatística
-# de cada variável: média, desvio padrão, mínimo, máximo, quartis.
-# Isso é fundamental para decidir como normalizar e mapear os dados.
+# Antes de qualquer transformação, analisamos a distribuição estatística
+# de cada variável (média, desvio padrão, mínimo, máximo, quartis).
+#
+# Por que isso vem antes da limpeza e do mapeamento?
+#   Sem entender como os dados se distribuem, qualquer transformação é cega.
+#   A EDA responde perguntas como:
+#     - PHQ9 está concentrado em valores baixos (maioria saudável) ou alto?
+#     - O dataset está balanceado entre "com" e "sem" transtorno mental?
+#     - Quais variáveis se correlacionam mais com MentalHealthStatus?
+#
+# Três gráficos são gerados:
+#
+#   Gráfico 1 — Histogramas das variáveis principais
+#     Revela a forma da distribuição (normal, enviesada, bimodal).
+#     Um PHQ9 concentrado em 0–4, por exemplo, indica predominância de
+#     estudantes com sintomas mínimos de depressão.
+#
+#   Gráfico 2 — Matriz de correlação (heatmap)
+#     Mostra a força e direção da relação linear entre cada par de variáveis.
+#     Correlações altas com MentalHealthStatus confirmam quais features
+#     são mais relevantes para o modelo de clustering.
+#
+#   Gráfico 3 — Boxplot de PHQ9 e GAD7 por MentalHealthStatus
+#     Compara visualmente os scores de depressão e ansiedade entre
+#     estudantes com e sem transtorno identificado. Se as caixas se
+#     sobrepõem pouco, essas features discriminam bem os grupos.
 # =============================================================================
 
 print("\n\n" + "=" * 65)
@@ -152,16 +184,30 @@ print("[OK] Gráfico 3 salvo: graficos/03_phq9_gad7_por_status.png")
 
 
 # =============================================================================
-# ETAPA 3 — VERIFICAÇÃO DE QUALIDADE
+# ETAPA 3 — VERIFICAÇÃO DE QUALIDADE DOS DADOS
 # =============================================================================
-# Checamos três tipos de problemas comuns em datasets reais:
+# Checamos três categorias de problema que comprometem qualquer pipeline de ML:
 #
-#   a) Valores nulos   -> podem quebrar modelos de ML
-#   b) Linhas duplicadas -> inflam artificialmente classes
-#   c) Outliers (IQR)  -> valores extremos que distorcem a média/clustering
+#   a) Valores nulos
+#      O scikit-learn não aceita NaN. Se houver, é preciso imputar (preencher
+#      com média/mediana) ou remover a linha. Checamos antes de qualquer
+#      transformação para evitar erros silenciosos.
 #
-# Método IQR (Interquartile Range):
-#   Outlier = valor < Q1 - 1.5*IQR  ou  valor > Q3 + 1.5*IQR
+#   b) Linhas duplicadas
+#      Registros repetidos fazem o modelo "ver" certas amostras mais vezes,
+#      inflando artificialmente a representatividade de uma classe ou cluster.
+#      Removemos e resetamos o índice para não criar lacunas.
+#
+#   c) Outliers — Método IQR (Interquartile Range)
+#      IQR = Q3 - Q1  (distância entre o 75º e o 25º percentil)
+#      Outlier = valor < Q1 - 1.5×IQR  ou  valor > Q3 + 1.5×IQR
+#
+#      Detectamos mas MANTEMOS os outliers neste dataset. Justificativa:
+#      valores extremos como 3h de sono ou 12h de tela por dia são dados
+#      fisiologicamente plausíveis em estudantes sob alta pressão acadêmica.
+#      São exatamente esses estudantes que formam os perfis "Sob Pressão"
+#      e "Em Alerta" que o K-Means precisa identificar. Removê-los
+#      produziria um modelo que nunca classificaria os casos mais críticos.
 # =============================================================================
 
 print("\n\n" + "=" * 65)
@@ -219,37 +265,48 @@ print(f"     'Em Alerta' que o K-Means precisa detectar.")
 # =============================================================================
 # ETAPA 4 — FEATURE ENGINEERING E MAPEAMENTO PARA O SCHEMA PRISMA
 # =============================================================================
-# Transformamos as colunas numéricas do dataset original nos campos
-# que o schema Prisma espera (model RegistroBemEstar).
+# As colunas do dataset estão em escalas clínicas/acadêmicas brutas
+# (ex.: PHQ9 de 0 a 27). O banco de dados do EntreMentes usa tipos e
+# enums específicos definidos no schema Prisma. Esta etapa faz a ponte
+# entre os dois formatos.
+#
+# Por que criar novas colunas em vez de renomear?
+#   Mantemos as originais intactas para o K-Means (Etapa 5) continuar
+#   usando os valores numéricos contínuos. As novas colunas mapeadas
+#   são usadas somente na exportação JSON (Etapa 7).
 #
 # Mapeamentos realizados:
 #
-#  PHQ9 (0–27) -> nivelHumor (Int, escala 1–5)
-#    Baseado na escala clínica oficial do PHQ-9:
-#    0–4   = Mínimo    -> 5 (Muito bom)
-#    5–9   = Leve      -> 4 (Bom)
-#    10–14 = Moderado  -> 3 (Neutro)
-#    15–19 = Mod. Grav -> 2 (Ruim)
-#    20–27 = Grave     -> 1 (Muito ruim)
+#   PHQ9 (0–27) → nivelHumor (Int 1–5)
+#     O PHQ-9 (Patient Health Questionnaire) é a escala clínica padrão
+#     para rastreamento de depressão, validada por Kroenke et al. (2001).
+#     Convertemos para 1–5 invertendo a direção: PHQ9 alto = humor ruim.
+#       0–4   → 5  (Mínimo — Muito bom)
+#       5–9   → 4  (Leve — Bom)
+#       10–14 → 3  (Moderado — Neutro)
+#       15–19 → 2  (Mod. grave — Ruim)
+#       20–27 → 1  (Grave — Muito ruim)
 #
-#  AcademicStress (0–10) -> nivelEstresse (Enum: Baixo, Medio, Alto)
-#    0–3  -> Baixo
-#    4–6  -> Medio
-#    7–10 -> Alto
+#   AcademicStress (0–10) → nivelEstresse (Enum: Baixo | Medio | Alto)
+#     Divisão em terços da escala original.
+#       0–3  → Baixo
+#       4–6  → Medio
+#       7–10 → Alto
+#     Obs.: Prisma não aceita acento — o enum usa "Medio", não "Médio".
 #
-#  GPA (0–4) -> desempenhoAcademico (Enum: Melhorou, Mesmo, Piorou)
-#    > 3.0 -> Melhorou
-#    ≥ 2.0 -> Mesmo
-#    < 2.0 -> Piorou
+#   GPA (0.0–4.0) → desempenhoAcademico (Enum: Melhorou | Mesmo | Piorou)
+#     Baseado na interpretação padrão da escala GPA americana:
+#       > 3.0 → Melhorou  (bom desempenho — equivale a A/B)
+#       ≥ 2.0 → Mesmo     (desempenho médio — equivale a C)
+#       < 2.0 → Piorou    (baixo desempenho — equivale a D/F)
 #
-#  AcademicStress > 7 -> ansiedadeAntesProva (Boolean)
-#    Estudantes com estresse alto tendem a ter ansiedade antes de provas.
+#   AcademicStress > 7 → ansiedadeAntesProva (Boolean)
+#     Limiar definido pela literatura: estresse acadêmico acima de 7/10
+#     está fortemente associado a ansiedade situacional antes de avaliações.
 #
-# NOTA SOBRE O BUG DO analysis.py ORIGINAL:
-#   O script anterior usava MentalHealthStatus (0 ou 1) para nivelHumor,
-#   retornando apenas 5 ou 2 — mapeamento binário e clinicamente incorreto.
-#   Aqui usamos PHQ9, que é a escala real de depressão (0–27), gerando
-#   uma distribuição 1–5 muito mais rica e fiel à realidade.
+# NOTA: O script anterior (analysis.py) usava MentalHealthStatus (0 ou 1)
+#   para gerar nivelHumor, resultando apenas nos valores 2 ou 5 — binário
+#   e clinicamente incorreto. O PHQ9 produz distribuição completa em 5 níveis.
 # =============================================================================
 
 print("\n\n" + "=" * 65)
@@ -259,8 +316,9 @@ print("=" * 65)
 # ---- nivelHumor: PHQ9 -> escala 1–5 (escala clínica PHQ-9) ----
 def map_phq9_to_humor(phq9_score):
     """
-    Converte o score PHQ-9 (depressão) para a escala de humor do app (1–5).
-    Referência: Kroenke et al., 2001 — interpretação clínica do PHQ-9.
+    Converte o score PHQ-9 para a escala de humor do app (1–5).
+    Direção invertida: PHQ9 alto = depressão grave = nivelHumor baixo.
+    Faixas: Kroenke et al., 2001 — interpretação clínica do PHQ-9.
     """
     if phq9_score <= 4:
         return 5   # Mínimo -> Muito bom
@@ -277,7 +335,8 @@ def map_phq9_to_humor(phq9_score):
 def map_stress(stress_score):
     """
     Converte AcademicStress (0–10) para o enum NivelEstresse do Prisma.
-    Prisma aceita exatamente: 'Baixo', 'Medio', 'Alto' (sem acento em Médio).
+    Divisão em terços: 0–3 Baixo / 4–6 Medio / 7–10 Alto.
+    Atenção: Prisma exige 'Medio' sem acento (restrição do enum).
     """
     if stress_score <= 3:
         return "Baixo"
@@ -290,7 +349,7 @@ def map_stress(stress_score):
 def map_gpa(gpa):
     """
     Converte GPA (0.0–4.0) para o enum DesempenhoAcademico do Prisma.
-    Escala GPA americana: > 3.0 = bom desempenho, < 2.0 = baixo desempenho.
+    Limiares da escala GPA americana: A/B = > 3.0, C = ≥ 2.0, D/F = < 2.0.
     """
     if gpa > 3.0:
         return "Melhorou"
@@ -366,19 +425,27 @@ print("\n[OK] Gráfico 4 salvo: graficos/04_campos_mapeados.png")
 # =============================================================================
 # ETAPA 5 — SELEÇÃO DE FEATURES PARA O K-MEANS
 # =============================================================================
-# O algoritmo K-Means agrupa amostras com base em distância euclidiana.
-# Escolhemos as 6 features que:
-#   a) O app coleta do usuário real (correspondência direta com o formulário)
-#   b) Têm maior correlação com saúde mental conforme a EDA (etapa 2)
-#   c) São numéricas contínuas (K-Means não opera bem com categorias)
+# Das 16 colunas do dataset, selecionamos 6 com base em três critérios
+# aplicados simultaneamente:
 #
-# Features selecionadas:
-#   SleepHours    -> duracaoSono no app
-#   ScreenTime    -> tempoTela no app
-#   ExerciseFreq  -> atividadeFisica no app
-#   AcademicStress-> base do nivelEstresse no app
-#   PHQ9          -> base do nivelHumor no app
-#   GAD7          -> indicador de ansiedade (complementa PHQ9)
+#   a) Correspondência com o formulário do app
+#      O modelo só é útil em produção se conseguir classificar usuários reais.
+#      Cada feature aqui tem um campo equivalente que o usuário preenche:
+#        SleepHours    → duracaoSono
+#        ScreenTime    → tempoTela
+#        ExerciseFreq  → atividadeFisica
+#        AcademicStress→ base do nivelEstresse
+#        PHQ9          → base do nivelHumor
+#        GAD7          → complementa PHQ9 (ansiedade vs. depressão)
+#
+#   b) Relevância para saúde mental (confirmada na EDA)
+#      As correlações calculadas na Etapa 2 mostraram que essas 6 variáveis
+#      têm maior associação com MentalHealthStatus entre todas as 16.
+#
+#   c) Tipo numérico contínuo
+#      K-Means mede distância euclidiana — variáveis categóricas (strings,
+#      booleans) distorceriam o cálculo de distância. Colunas como
+#      MentalHealthStatus (0/1) e FamilySupport (ordinal) foram excluídas.
 # =============================================================================
 
 print("\n\n" + "=" * 65)
@@ -411,15 +478,28 @@ for feat, val in corr_target.sort_values(key=abs, ascending=False).items():
 # =============================================================================
 # ETAPA 6 — NORMALIZAÇÃO (MinMaxScaler)
 # =============================================================================
-# K-Means utiliza distância euclidiana para medir similaridade entre pontos.
-# Sem normalização, features com escalas maiores dominam o cálculo:
-#   - PHQ9 vai de 0 a 27  ->  diferença máxima de 27 unidades
-#   - ExerciseFreq vai de 0 a 7  ->  diferença máxima de 7 unidades
+# K-Means mede similaridade via distância euclidiana entre pontos no espaço
+# n-dimensional. O problema: as features estão em escalas muito diferentes.
 #
-# Sem normalização, PHQ9 teria ~4× mais influência que ExerciseFreq,
-# distorcendo os clusters. Com MinMaxScaler, todas ficam em [0, 1].
+#   Exemplo sem normalização:
+#     PHQ9 vai de 0 a 27 → diferença máxima de 27 unidades
+#     ExerciseFreq vai de 0 a 7 → diferença máxima de 7 unidades
+#     → PHQ9 domina o cálculo com ~4× mais influência que ExerciseFreq.
 #
-# MinMaxScaler: X_norm = (X - X_min) / (X_max - X_min)
+#   O resultado seriam clusters formados quase exclusivamente pela variação
+#   do PHQ9, ignorando as demais features — o oposto do objetivo.
+#
+# MinMaxScaler coloca todas as features no intervalo [0, 1]:
+#   X_norm = (X - X_min) / (X_max - X_min)
+#
+#   Após a normalização, uma diferença de 0.5 em qualquer feature representa
+#   50% da amplitude total daquela variável — peso igual para todas.
+#
+# Salvamos as colunas normalizadas com sufixo "_norm" no mesmo DataFrame,
+# mantendo as originais para referência e para a exportação JSON.
+#
+# O Gráfico 5 mostra os histogramas antes e depois para cada feature,
+# confirmando que a forma da distribuição é preservada — apenas a escala muda.
 # =============================================================================
 
 print("\n\n" + "=" * 65)
@@ -458,17 +538,23 @@ print("\n[OK] Gráfico 5 salvo: graficos/05_normalizacao.png")
 # =============================================================================
 # ETAPA 7 — EXPORTAÇÃO DOS ARTEFATOS FINAIS
 # =============================================================================
-# Geramos dois arquivos com propósitos distintos:
+# O pré-processamento produz dois artefatos com destinos e formatos distintos:
 #
 #   [JSON] dados_tratados.json
-#      Formato: array de objetos JSON compatível com o model RegistroBemEstar
-#      do Prisma. Cada objeto tem os campos exatos que o backend Node.js espera.
-#      Uso: seed do banco de dados via script Node.js ou Prisma Studio.
+#      Destino : backend Node.js → seed do banco PostgreSQL via Prisma.
+#      Formato : array de objetos JSON com os campos exatos do model
+#                RegistroBemEstar — tipos, nomes e enums compatíveis com o
+#                schema Prisma. Cada registro recebe um UUID único gerado
+#                localmente (não há userId real em dados de pesquisa).
+#      Conteúdo: nivelHumor, nivelEstresse, desempenhoAcademico,
+#                ansiedadeAntesProva, tempoTela, duracaoSono, atividadeFisica.
 #
 #   [CSV] features_kmeans.csv
-#      Formato: CSV com as 6 features originais + 6 normalizadas.
-#      Uso: treinamento do modelo K-Means no mining-service (Python).
-#      O scikit-learn usará apenas as colunas "_norm" para o fit().
+#      Destino : kmeans_clustering.py → treinamento do modelo de clustering.
+#      Formato : 12 colunas — 6 features originais + 6 normalizadas (_norm).
+#                O kmeans_clustering.py usará apenas as colunas "_norm" no
+#                fit() do scikit-learn; as originais ficam para referência
+#                humana na análise dos centroides.
 # =============================================================================
 
 print("\n\n" + "=" * 65)
@@ -514,8 +600,13 @@ print(f"   Colunas norm.     : {[c for c in df_kmeans_final.columns if '_norm' i
 # =============================================================================
 # ETAPA 8 — RELATÓRIO FINAL DE QUALIDADE
 # =============================================================================
-# Resumo executivo do pré-processamento para entrega à professora.
-# Confirma que os dados estão prontos para as próximas etapas do PI.
+# Imprime um resumo executivo consolidando todas as decisões tomadas:
+# volume de dados, problemas encontrados, mapeamentos aplicados,
+# método de normalização e artefatos gerados.
+#
+# Funciona como checklist de entrega: confirma que o pipeline foi executado
+# sem erros e que os dois artefatos (JSON e CSV) estão prontos para as
+# próximas etapas — seed do banco e treinamento do K-Means.
 # =============================================================================
 
 print("\n\n" + "=" * 65)
