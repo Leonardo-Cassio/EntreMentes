@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./docs/swagger');
 
 const app = express();
 app.use(cors());
@@ -16,7 +18,12 @@ app.use('/users',     userRoutes);
 app.use('/mood',      moodRoutes);
 app.use('/analytics', analyticsRoutes);
 
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.get('/', (req, res) => res.json({ success: true, message: "API EntreMentes OK" }));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Rodando na porta ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Rodando na porta ${PORT}`);
+  console.log(`Swagger UI: http://localhost:${PORT}/docs`);
+});

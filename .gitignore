@@ -1,0 +1,31 @@
+# Dependências
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Variáveis de ambiente
+.env
+*.env.local
+
+# Credenciais
+gcp-credentials.json
+*.json.key
+
+# Build
+dist/
+build/
+.expo/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
