@@ -16,11 +16,12 @@ retomar exatamente de onde o anterior parou.
 
 ## Estado atual do desenvolvimento
 
-> **Última atualização:** 2026-05-13 (sessão completa)
+> **Última atualização:** 2026-05-17 (sessão deploy)
 > **Sprint 2 apresentada com sucesso — sem objeções dos professores ✅**
 > **Sprint 3 em andamento — todo o Bloco C frontend concluído ✅**
 > **Integração mining-service ↔ backend sem Pub/Sub implementada ✅**
 > **Comentários data-analysis aprimorados para apresentação ✅**
+> **Deploy Railway concluído — backend + PostgreSQL online em produção ✅**
 
 ---
 
@@ -121,16 +122,14 @@ retomar exatamente de onde o anterior parou.
 - [x] **A3** Swagger UI — spec OpenAPI 3.0 em `backend/src/docs/swagger.js`, comentários JSDoc em todas as rotas, Swagger UI montado em `/docs` via `swagger-ui-express`
 
 **Deploy**
-- [ ] **D1** Deploy Railway — **passado para o Leonardo** (repo está na conta dele, mais fácil subir via GitHub direto no Railway dashboard)
-  - backend/Dockerfile corrigido: `CMD sh -c "npx prisma migrate deploy && node src/server.js"`
-  - backend/railway.toml criado: build = nixpacks, startCommand inclui migrate deploy
-  - backend/package.json: scripts `start` e `build` adicionados
-  - backend/.gitignore criado
-  - .gitignore raiz criado
-  - Projeto criado no Railway (ID: d38ee39c-62e8-4f91-a9b0-c6a285b2b95f) na conta Gabriel
-  - PostgreSQL adicionado ao projeto Railway
-  - Variáveis configuradas: PORT=3000, NODE_ENV=production, JWT_SECRET, JWT_EXPIRES_IN=7d
-  - **Blocker:** DATABASE_URL do Postgres não estava sendo injetada automaticamente — Leonardo deve usar Variable Reference no dashboard ao subir pelo GitHub
+- [x] **D1** Deploy Railway — backend + PostgreSQL online em produção ✅
+  - **URL pública:** `https://entrementes-production.up.railway.app`
+  - **Swagger UI em produção:** `https://entrementes-production.up.railway.app/docs`
+  - Conta Railway: Leonardo (projeto criado do zero na sessão 17/05)
+  - Serviços no Railway: EntreMentes (Node.js) + Postgres (banco gerenciado)
+  - Root Directory configurado para `backend/` nas Settings do serviço
+  - `DATABASE_URL` configurada via Variable Reference: `${{Postgres.DATABASE_URL}}`
+  - `web/src/services/api.js` e `mobile/src/services/api.js` apontando para URL de produção
 
 - [ ] Vídeo demonstração (até 5 min, YouTube, todos os membros)
 - [ ] Relatório final do PI
@@ -138,6 +137,35 @@ retomar exatamente de onde o anterior parou.
 ---
 
 ## Histórico de sessões
+
+### Sessão 17/05/2026 — Deploy Railway D1 (Leonardo)
+```
+backend/package.json                  ← script start: migrate deploy via node direto;
+                                         postinstall: prisma generate via node direto;
+                                         bcrypt → bcryptjs (binário nativo incompatível com Linux)
+backend/railway.toml                  ← buildCommand removido; startCommand = "npm start"
+backend/Dockerfile                    ← DELETADO (conflitava com nixpacks; nixpacks preferido)
+backend/prisma/migrations/            ← 2 migrations antigas deletadas (schema desatualizado);
+                                         nova migration 0_init criada via prisma migrate diff
+                                         (schema completo: 3 enums + 6 tabelas + índices + FK)
+backend/src/services/authService.js   ← require('bcrypt') → require('bcryptjs')
+web/src/services/api.js               ← API_URL → https://entrementes-production.up.railway.app
+mobile/src/services/api.js            ← URL produção → https://entrementes-production.up.railway.app
+```
+**Erros resolvidos durante o deploy (em ordem):**
+1. Root Directory não configurado → Settings do serviço → `backend`
+2. `prisma: Permission denied` no build → movido para `postinstall` via `node node_modules/prisma/build/index.js`
+3. `prisma: Permission denied` no start → `startCommand` virou `npm start`; script start usa `node node_modules/prisma/build/index.js migrate deploy`
+4. `bcrypt: invalid ELF header` → binário C++ compilado no Windows não roda em Linux → substituído por `bcryptjs` (puro JS)
+5. `DATABASE_URL` apontando para localhost → variável configurada no Railway como `${{Postgres.DATABASE_URL}}`
+
+**Variáveis configuradas no Railway (serviço EntreMentes):**
+- `DATABASE_URL` = `${{Postgres.DATABASE_URL}}` (Variable Reference)
+- `PORT` = `3000`
+- `NODE_ENV` = `production`
+- `JWT_SECRET` = (string secreta)
+- `JWT_EXPIRES_IN` = `7d`
+- `MINING_SERVICE_URL` = `http://localhost:5000` (classify falha silenciosamente em produção — aceitável por ora)
 
 ### Sessão 15-17/05/2026 — noite (A3 + D1 parcial)
 ```
@@ -148,14 +176,12 @@ backend/src/routes/moodRoutes.js      ← comentários @swagger adicionados (5 e
 backend/src/routes/analyticsRoutes.js ← comentários @swagger adicionados (GET /profile)
 backend/src/server.js                 ← Swagger UI montado em /docs
 backend/package.json                  ← scripts start e build adicionados
-backend/Dockerfile                    ← CMD corrigido: migrate deploy + node server.js
 backend/railway.toml                  ← NOVO: builder nixpacks, startCommand com migrate
 backend/.gitignore                    ← NOVO
 .gitignore                            ← NOVO (raiz do projeto)
 Documentação/API.md                   ← NOVO: doc Markdown (complementar ao Swagger)
 ```
 Swagger UI acessível em http://localhost:3000/docs quando backend rodando localmente.
-Deploy Railway iniciado mas não concluído — passado para Leonardo (repo na conta dele).
 
 ### Sessão 22/04/2026
 ```
@@ -280,17 +306,32 @@ README.md                                   ← atualizado com tabela de telas e
 
 ---
 
+## Deploy — URLs e acesso
+
+| Serviço | URL |
+|---------|-----|
+| API REST (produção) | `https://entrementes-production.up.railway.app` |
+| Swagger UI (produção) | `https://entrementes-production.up.railway.app/docs` |
+| Swagger UI (local) | `http://localhost:3000/docs` |
+| Railway dashboard | `https://railway.app` — conta Leonardo |
+
+### Observações importantes sobre o deploy
+- O **mining-service** (Python/Flask) **não está deployado** — só roda localmente. Em produção, a classificação de perfil falha silenciosamente (try/catch no `classifyService.js`). Para ativar em produção: fazer deploy do mining-service separadamente no Railway e atualizar a variável `MINING_SERVICE_URL`.
+- O mobile em `__DEV__` (Expo Go) usa `localhost:3000` automaticamente via `Constants.expoConfig.hostUri`. A URL de produção só é usada em builds de produção.
+- O banco Railway é um PostgreSQL gerenciado — **não rodar `prisma migrate reset`** em produção.
+- Para adicionar migrations futuras: rodar `npx prisma migrate dev --name <nome>` localmente, commitar a nova pasta em `prisma/migrations/`, e o Railway aplica automaticamente no próximo deploy via `prisma migrate deploy` no `npm start`.
+
+---
+
 ## Pendências para próxima sessão
 
 1. **GCP / Pub/Sub** — EM QUARENTENA. Aguardando professor fornecer instruções e acesso ao GCP Console.
 
-2. **Deploy Railway** — backend + PostgreSQL em produção.
+2. **Deploy mining-service** — o serviço Python não está em produção. Sem ele, `GET /analytics/profile` retorna 404 para usuários novos (nenhuma classificação é gerada). Opções: deploy no Railway como segundo serviço, ou Railway + Dockerfile Python.
 
-3. **Documentação da API REST** — exigida na Sprint 3 (OpenAPI/Swagger ou equivalente).
+3. **Vídeo demonstração** — até 5 min, YouTube, com presença dos dois integrantes.
 
-4. **Vídeo demonstração** — até 5 min, YouTube, com presença dos dois integrantes.
-
-5. **Relatório final do PI**.
+4. **Relatório final do PI**.
 
 ---
 
