@@ -117,15 +117,45 @@ retomar exatamente de onde o anterior parou.
 - [x] Comentários de `preprocessing.py` aprimorados para apresentação (cada etapa explica o "porquê" técnico)
 - [x] Comentários de `kmeans_clustering.py` aprimorados (cotovelo, silhouette, k-means++, rotulagem, radar chart)
 
-**Pendente**
-- [ ] Deploy Railway (backend + PostgreSQL)
-- [ ] Documentação da API REST (OpenAPI/Swagger ou equivalente) — exigido Sprint 3
+**Documentação**
+- [x] **A3** Swagger UI — spec OpenAPI 3.0 em `backend/src/docs/swagger.js`, comentários JSDoc em todas as rotas, Swagger UI montado em `/docs` via `swagger-ui-express`
+
+**Deploy**
+- [ ] **D1** Deploy Railway — **passado para o Leonardo** (repo está na conta dele, mais fácil subir via GitHub direto no Railway dashboard)
+  - backend/Dockerfile corrigido: `CMD sh -c "npx prisma migrate deploy && node src/server.js"`
+  - backend/railway.toml criado: build = nixpacks, startCommand inclui migrate deploy
+  - backend/package.json: scripts `start` e `build` adicionados
+  - backend/.gitignore criado
+  - .gitignore raiz criado
+  - Projeto criado no Railway (ID: d38ee39c-62e8-4f91-a9b0-c6a285b2b95f) na conta Gabriel
+  - PostgreSQL adicionado ao projeto Railway
+  - Variáveis configuradas: PORT=3000, NODE_ENV=production, JWT_SECRET, JWT_EXPIRES_IN=7d
+  - **Blocker:** DATABASE_URL do Postgres não estava sendo injetada automaticamente — Leonardo deve usar Variable Reference no dashboard ao subir pelo GitHub
+
 - [ ] Vídeo demonstração (até 5 min, YouTube, todos os membros)
 - [ ] Relatório final do PI
 
 ---
 
 ## Histórico de sessões
+
+### Sessão 15-17/05/2026 — noite (A3 + D1 parcial)
+```
+backend/src/docs/swagger.js           ← NOVO: spec OpenAPI 3.0, schemas reutilizáveis
+backend/src/routes/authRoutes.js      ← comentários @swagger adicionados (register, login)
+backend/src/routes/userRoutes.js      ← comentários @swagger adicionados (GET/PUT/DELETE /me)
+backend/src/routes/moodRoutes.js      ← comentários @swagger adicionados (5 endpoints)
+backend/src/routes/analyticsRoutes.js ← comentários @swagger adicionados (GET /profile)
+backend/src/server.js                 ← Swagger UI montado em /docs
+backend/package.json                  ← scripts start e build adicionados
+backend/Dockerfile                    ← CMD corrigido: migrate deploy + node server.js
+backend/railway.toml                  ← NOVO: builder nixpacks, startCommand com migrate
+backend/.gitignore                    ← NOVO
+.gitignore                            ← NOVO (raiz do projeto)
+Documentação/API.md                   ← NOVO: doc Markdown (complementar ao Swagger)
+```
+Swagger UI acessível em http://localhost:3000/docs quando backend rodando localmente.
+Deploy Railway iniciado mas não concluído — passado para Leonardo (repo na conta dele).
 
 ### Sessão 22/04/2026
 ```
