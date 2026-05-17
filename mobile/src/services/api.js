@@ -7,7 +7,7 @@ const getBaseUrl = () => {
     const host = Constants.expoConfig?.hostUri?.split(':')[0] ?? 'localhost';
     return `http://${host}:3000`;
   }
-  return 'https://sua-url-de-producao.com'; // TODO: substituir no deploy
+  return 'https://entrementes-production.up.railway.app';
 };
 
 const API_URL = getBaseUrl();
