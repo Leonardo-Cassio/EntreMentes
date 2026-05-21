@@ -43,4 +43,10 @@ export const api = {
     request('/analytics/profile', {
       headers: { Authorization: `Bearer ${token}` },
     }),
+
+  deleteMe: (token) =>
+    request('/users/me', {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    }),
 };

@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import './Sidebar.css';
 
 function IconeDashboard({ cor }) {
@@ -49,16 +51,34 @@ const NAV_ITEMS = [
   { path: '/historico', label: 'Histórico',       Icone: IconeHistorico },
 ];
 
+function IconeExcluir({ cor }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <polyline points="3 6 5 6 21 6" stroke={cor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M19 6l-1 14H6L5 6" stroke={cor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 11v6M14 11v6" stroke={cor} strokeWidth="2" strokeLinecap="round" />
+      <path d="M9 6V4h6v2" stroke={cor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export default function Sidebar() {
   const navigate  = useNavigate();
   const location  = useLocation();
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
+  const [modalExcluir, setModalExcluir] = useState(false);
 
   const iniciais = user?.name
     ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : 'US';
 
   const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
+  const handleExcluirConta = async () => {
+    await api.deleteMe(token);
     logout();
     navigate('/login', { replace: true });
   };
@@ -91,11 +111,27 @@ export default function Sidebar() {
           <div className="sidebar-avatar">{iniciais}</div>
           <span className="sidebar-nome">{user?.name ?? 'Usuário'}</span>
         </div>
+        <button className="sidebar-excluir" onClick={() => setModalExcluir(true)}>
+          <IconeExcluir cor="#636E72" />
+          <span>Excluir conta</span>
+        </button>
         <button className="sidebar-sair" onClick={handleLogout}>
           <IconeSair cor="#636E72" />
           <span>Sair</span>
         </button>
       </div>
+
+      {modalExcluir && (
+        <div className="sidebar-modal-overlay" onClick={() => setModalExcluir(false)}>
+          <div className="sidebar-modal" onClick={e => e.stopPropagation()}>
+            <p className="sidebar-modal-texto">Tem certeza de que quer excluir a sua conta?</p>
+            <div className="sidebar-modal-botoes">
+              <button className="sidebar-modal-sim" onClick={handleExcluirConta}>Sim</button>
+              <button className="sidebar-modal-nao" onClick={() => setModalExcluir(false)}>Não</button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }
