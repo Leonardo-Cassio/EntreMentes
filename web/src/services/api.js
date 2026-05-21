@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000';
+const API_URL = 'https://entrementes-production.up.railway.app';
 
 async function request(path, { method = 'GET', headers = {}, body } = {}) {
   const res = await fetch(`${API_URL}${path}`, {
