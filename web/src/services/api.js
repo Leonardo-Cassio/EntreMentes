@@ -1,4 +1,4 @@
-const API_URL = 'https://entrementes-production.up.railway.app';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
 async function request(path, { method = 'GET', headers = {}, body } = {}) {
   const res = await fetch(`${API_URL}${path}`, {
