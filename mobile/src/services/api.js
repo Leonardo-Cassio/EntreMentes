@@ -1,9 +1,11 @@
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
-// Em desenvolvimento, usa o IP da máquina onde o Expo está rodando.
-// Assim funciona tanto no simulador quanto no dispositivo físico via Expo Go.
+// Quando rodando como web (expo start --web), usa sempre a URL de produção
+// pois não há backend local. Em nativo (Expo Go / build), usa o IP da máquina
+// para apontar para o backend local em desenvolvimento.
 const getBaseUrl = () => {
-  if (__DEV__) {
+  if (__DEV__ && Platform.OS !== 'web') {
     const host = Constants.expoConfig?.hostUri?.split(':')[0] ?? 'localhost';
     return `http://${host}:3000`;
   }
@@ -48,6 +50,19 @@ export const api = {
 
   listRegistros: (token) =>
     request('/mood', {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  updateMe: (token, data) =>
+    request('/users/me', {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    }),
+
+  deleteMe: (token) =>
+    request('/users/me', {
+      method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     }),
 

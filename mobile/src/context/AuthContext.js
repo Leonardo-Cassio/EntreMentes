@@ -33,6 +33,12 @@ export function AuthProvider({ children }) {
     setUser(userData);
   };
 
+  const updateUser = async (userData) => {
+    const updated = { ...user, ...userData };
+    await AsyncStorage.setItem('user', JSON.stringify(updated));
+    setUser(updated);
+  };
+
   const logout = async () => {
     await AsyncStorage.multiRemove(['token', 'user']);
     setToken(null);
@@ -40,7 +46,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser, loading, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   );

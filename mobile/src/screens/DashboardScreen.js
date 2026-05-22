@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Dimensions, StatusBar, Modal, ActivityIndicator,
+  StyleSheet, StatusBar, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Svg, Polyline, Path, Rect, Line, Text as SvgText } from 'react-native-svg';
@@ -10,10 +10,8 @@ import { fonts } from '../theme/fonts';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_PADDING = 16;
 const OUTER_PADDING = 20;
-const CHART_WIDTH = SCREEN_WIDTH - OUTER_PADDING * 2 - CARD_PADDING * 2;
 
 // ── Helpers para transformar dados da API ────────────────────────────────
 
@@ -91,11 +89,11 @@ const DADOS_BARRA = [
 ];
 
 // ── Gráfico de linha (SVG) ───────────────────────────────────────────────
-function GraficoLinha({ dados }) {
+function GraficoLinha({ dados, width }) {
   const padLeft = 24;
   const padBottom = 20;
   const chartH = 160;
-  const plotW = CHART_WIDTH - padLeft;
+  const plotW = width - padLeft;
   const plotH = chartH - padBottom;
   const minVal = 1, maxVal = 5;
 
@@ -118,13 +116,13 @@ function GraficoLinha({ dados }) {
   const yLabels = [2, 3, 4, 5];
 
   return (
-    <Svg width={CHART_WIDTH} height={chartH}>
+    <Svg width={width} height={chartH}>
       {/* Grade horizontal */}
       {yLabels.map(v => {
         const y = plotH - ((v - minVal) / (maxVal - minVal)) * plotH;
         return (
           <React.Fragment key={v}>
-            <Line x1={padLeft} y1={y} x2={CHART_WIDTH} y2={y} stroke="#F0F0F0" strokeWidth={1} />
+            <Line x1={padLeft} y1={y} x2={width} y2={y} stroke="#F0F0F0" strokeWidth={1} />
             <SvgText x={0} y={y + 4} fontSize={9} fill={colors.textLight}>{v}</SvgText>
           </React.Fragment>
         );
@@ -154,27 +152,27 @@ function GraficoLinha({ dados }) {
 }
 
 // ── Gráfico de barras (SVG) ──────────────────────────────────────────────
-function GraficoBarra({ dados }) {
+function GraficoBarra({ dados, width }) {
   const padLeft = 24;
   const padBottom = 24;
   const chartH = 160;
-  const plotW = CHART_WIDTH - padLeft;
+  const plotW = width - padLeft;
   const plotH = chartH - padBottom;
   const maxVal = 5;
   const barSlot = plotW / dados.length;
   const barW = barSlot * 0.55;
-  const radius = 5;
+  const radius = 4;
 
   const yLabels = [1, 2, 3, 4, 5];
 
   return (
-    <Svg width={CHART_WIDTH} height={chartH}>
+    <Svg width={width} height={chartH}>
       {/* Grade */}
       {yLabels.map(v => {
         const y = plotH - (v / maxVal) * plotH;
         return (
           <React.Fragment key={v}>
-            <Line x1={padLeft} y1={y} x2={CHART_WIDTH} y2={y} stroke="#F0F0F0" strokeWidth={1} />
+            <Line x1={padLeft} y1={y} x2={width} y2={y} stroke="#F0F0F0" strokeWidth={1} />
             <SvgText x={0} y={y + 4} fontSize={9} fill={colors.textLight}>{v}</SvgText>
           </React.Fragment>
         );
@@ -182,21 +180,23 @@ function GraficoBarra({ dados }) {
 
       {/* Barras */}
       {dados.map(({ dia, valor }, i) => {
-        const barH = (valor / maxVal) * plotH;
+        const rawH = (valor / maxVal) * plotH;
+        const barH = rawH < 3 ? 3 : rawH;
         const x = padLeft + i * barSlot + (barSlot - barW) / 2;
         const y = plotH - barH;
+        const r = Math.min(radius, barH / 2);
         const barPath =
-          `M ${x + radius},${y} ` +
-          `L ${x + barW - radius},${y} ` +
-          `Q ${x + barW},${y} ${x + barW},${y + radius} ` +
+          `M ${x + r},${y} ` +
+          `L ${x + barW - r},${y} ` +
+          `Q ${x + barW},${y} ${x + barW},${y + r} ` +
           `L ${x + barW},${plotH} ` +
           `L ${x},${plotH} ` +
-          `L ${x},${y + radius} ` +
-          `Q ${x},${y} ${x + radius},${y} Z`;
+          `L ${x},${y + r} ` +
+          `Q ${x},${y} ${x + r},${y} Z`;
 
         return (
           <React.Fragment key={dia}>
-            <Path d={barPath} fill={colors.primary} />
+            <Path d={barPath} fill={valor > 0 ? colors.primary : colors.border} />
             <SvgText
               x={x + barW / 2}
               y={chartH - 6}
@@ -220,6 +220,10 @@ export default function DashboardScreen({ navigation }) {
   const [modalVisivel, setModalVisivel]         = useState(false);
   const [registros, setRegistros]               = useState([]);
   const [loadingRegistros, setLoadingRegistros] = useState(true);
+  const [chartWidth, setChartWidth]             = useState(0);
+  const [modalPerfil, setModalPerfil]           = useState(false);
+  const [perfil, setPerfil]                     = useState(null);
+  const [loadingPerfil, setLoadingPerfil]       = useState(false);
 
   useEffect(() => {
     if (!token) { setLoadingRegistros(false); return; }
@@ -241,6 +245,21 @@ export default function DashboardScreen({ navigation }) {
   const dadosBarra       = transformarDadosBarra(registros);
 
   const humorAtual = EMOJIS.find(e => e.nivel === humorSelecionado);
+
+  const abrirPerfil = async () => {
+    setModalPerfil(true);
+    if (perfil) return;
+    setLoadingPerfil(true);
+    try {
+      const res = await api.getProfile(token);
+      if (res.success) setPerfil(res.data);
+      else setPerfil(null);
+    } catch {
+      setPerfil(null);
+    } finally {
+      setLoadingPerfil(false);
+    }
+  };
 
   const handleSelecionarHumor = (nivel) => {
     setHumorSelecionado(nivel);
@@ -290,32 +309,6 @@ export default function DashboardScreen({ navigation }) {
           ))}
         </View>
 
-        {/* Modal de confirmação */}
-        <Modal
-          visible={modalVisivel}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setModalVisivel(false)}
-        >
-          <View style={s.modalOverlay}>
-            <View style={s.modalCard}>
-              <Text style={s.modalEmoji}>{humorAtual?.emoji}</Text>
-              <Text style={s.modalTitulo}>Registrar como "{humorAtual?.label}"?</Text>
-              <Text style={s.modalSub}>
-                Quer completar o registro de humor de hoje com mais detalhes?
-              </Text>
-
-              <TouchableOpacity style={s.modalBtnPrimario} onPress={handleConfirmar} activeOpacity={0.85}>
-                <Text style={s.modalBtnPrimarioTexto}>Sim, completar registro</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={s.modalBtnSecundario} onPress={() => setModalVisivel(false)} activeOpacity={0.7}>
-                <Text style={s.modalBtnSecundarioTexto}>Agora não</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-
         {/* Métricas 2x2 */}
         <View style={s.metricasGrid}>
           <View style={s.metricaCard}>
@@ -339,25 +332,28 @@ export default function DashboardScreen({ navigation }) {
               <Text style={s.metricaIcone}>🔥</Text>
             </View>
           </View>
-          <View style={s.metricaCard}>
+          <TouchableOpacity style={s.metricaCard} onPress={abrirPerfil} activeOpacity={0.75}>
             <Text style={s.metricaLabel}>Seu Perfil</Text>
             <View style={s.metricaValorRow}>
               <Text style={s.metricaIcone}>🧠</Text>
-              <Text style={s.metricaValorPerfil}>Ver Humor</Text>
+              <Text style={s.metricaValorPerfil}>Ver perfil</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Gráfico de linha */}
-        <View style={s.chartCard}>
+        <View
+          style={s.chartCard}
+          onLayout={e => setChartWidth(e.nativeEvent.layout.width - CARD_PADDING * 2)}
+        >
           <Text style={s.chartTitulo}>Evolução do Humor</Text>
           {loadingRegistros ? (
             <ActivityIndicator color={colors.primary} style={{ paddingVertical: 60 }} />
-          ) : dadosLinha.length >= 2 ? (
-            <GraficoLinha dados={dadosLinha} />
-          ) : (
+          ) : dadosLinha.length >= 2 && chartWidth > 0 ? (
+            <GraficoLinha dados={dadosLinha} width={chartWidth} />
+          ) : !loadingRegistros ? (
             <Text style={s.chartVazio}>Adicione registros para ver a evolução</Text>
-          )}
+          ) : null}
         </View>
 
         {/* Gráfico de barras */}
@@ -365,9 +361,9 @@ export default function DashboardScreen({ navigation }) {
           <Text style={s.chartTitulo}>Humor por Dia da Semana</Text>
           {loadingRegistros ? (
             <ActivityIndicator color={colors.primary} style={{ paddingVertical: 60 }} />
-          ) : (
-            <GraficoBarra dados={dadosBarra} />
-          )}
+          ) : chartWidth > 0 ? (
+            <GraficoBarra dados={dadosBarra} width={chartWidth} />
+          ) : null}
         </View>
 
         {/* Última avaliação */}
@@ -393,6 +389,111 @@ export default function DashboardScreen({ navigation }) {
 
         <View style={{ height: 20 }} />
       </ScrollView>
+
+      {/* Modal confirmação humor — View absoluta para respeitar o container 430px no web */}
+      {modalVisivel && (
+        <View style={s.modalOverlay}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={() => setModalVisivel(false)} activeOpacity={1} />
+          <View style={s.modalCard}>
+            <Text style={s.modalEmoji}>{humorAtual?.emoji}</Text>
+            <Text style={s.modalTitulo}>Registrar como "{humorAtual?.label}"?</Text>
+            <Text style={s.modalSub}>
+              Quer completar o registro de humor de hoje com mais detalhes?
+            </Text>
+            <TouchableOpacity style={s.modalBtnPrimario} onPress={handleConfirmar} activeOpacity={0.85}>
+              <Text style={s.modalBtnPrimarioTexto}>Sim, completar registro</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.modalBtnSecundario} onPress={() => setModalVisivel(false)} activeOpacity={0.7}>
+              <Text style={s.modalBtnSecundarioTexto}>Agora não</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Modal perfil comportamental — View absoluta para respeitar o container 430px no web */}
+      {modalPerfil && (
+        <View style={s.perfilModalOverlay}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={() => setModalPerfil(false)} activeOpacity={1} />
+          <View style={s.perfilModalCard}>
+            <View style={s.perfilModalAlca} />
+            {loadingPerfil ? (
+              <>
+                <ActivityIndicator size="large" color={colors.primary} style={{ paddingVertical: 32 }} />
+                <Text style={[s.modalSub, { textAlign: 'center' }]}>Analisando seu perfil...</Text>
+              </>
+            ) : !perfil ? (
+              <>
+                <Text style={{ fontSize: 48, textAlign: 'center' }}>📊</Text>
+                <Text style={s.modalTitulo}>Perfil ainda não gerado</Text>
+                <Text style={s.modalSub}>
+                  Faça pelo menos um registro de humor para gerar sua análise comportamental.
+                </Text>
+                <TouchableOpacity style={s.modalBtnPrimario} onPress={() => { setModalPerfil(false); navigation.navigate('Diário'); }} activeOpacity={0.85}>
+                  <Text style={s.modalBtnPrimarioTexto}>Fazer primeiro registro</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {/* Header */}
+                <View style={[s.perfilHeader, { backgroundColor: perfil.bgRisco ?? '#EDE7F6' }]}>
+                  <Text style={s.perfilEmoji}>{perfil.emoji ?? '🧠'}</Text>
+                  <Text style={s.perfilNome}>{perfil.nomePerfil}</Text>
+                  <View style={[s.perfilBadge, { backgroundColor: perfil.corRisco ?? colors.primary }]}>
+                    <Text style={s.perfilBadgeTexto}>Risco {perfil.nivelRisco}</Text>
+                  </View>
+                </View>
+
+                <Text style={s.perfilJustificativa}>{perfil.justificativa}</Text>
+
+                {/* Médias */}
+                {perfil.medias && (
+                  <View style={s.perfilPillsRow}>
+                    {[
+                      { label: 'Sono', valor: `${perfil.medias.duracaoSono?.toFixed(1)}h`, ref: '7–9h' },
+                      { label: 'Tela',  valor: `${perfil.medias.tempoTela?.toFixed(1)}h`,  ref: '< 6h' },
+                      { label: 'Exerc.', valor: `${perfil.medias.atividadeFisica?.toFixed(1)}h`, ref: '> 4h' },
+                    ].map((p, i) => (
+                      <View key={i} style={s.perfilPill}>
+                        <Text style={s.perfilPillLabel}>{p.label}</Text>
+                        <Text style={s.perfilPillValor}>{p.valor}</Text>
+                        <Text style={s.perfilPillRef}>{p.ref}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Insights */}
+                {perfil.insights?.length > 0 && (
+                  <View style={s.perfilSecao}>
+                    <Text style={s.perfilSecaoTitulo}>⚠️ Pontos de atenção</Text>
+                    {perfil.insights.map((ins, i) => (
+                      <Text key={i} style={s.perfilItem}>• {ins}</Text>
+                    ))}
+                  </View>
+                )}
+
+                {/* Recomendações */}
+                {perfil.recomendacoes?.length > 0 && (
+                  <View style={[s.perfilSecao, { backgroundColor: '#E8F4FD' }]}>
+                    <Text style={s.perfilSecaoTitulo}>💡 Recomendações</Text>
+                    {perfil.recomendacoes.map((rec, i) => (
+                      <Text key={i} style={s.perfilItem}>• {rec}</Text>
+                    ))}
+                  </View>
+                )}
+
+                <Text style={s.perfilDisclaimer}>
+                  Este resultado não substitui acompanhamento profissional de saúde mental.
+                </Text>
+              </ScrollView>
+            )}
+
+            <TouchableOpacity style={[s.modalBtnSecundario, { marginTop: 8 }]} onPress={() => setModalPerfil(false)} activeOpacity={0.7}>
+              <Text style={s.modalBtnSecundarioTexto}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -492,7 +593,8 @@ const s = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 14,
     padding: 16,
-    width: (SCREEN_WIDTH - OUTER_PADDING * 2 - 12) / 2,
+    flex: 1,
+    minWidth: '45%',
     gap: 8,
     borderWidth: 1,
     borderColor: colors.border,
@@ -549,11 +651,13 @@ const s = StyleSheet.create({
 
   // Modal
   modalOverlay: {
-    flex: 1,
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.45)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
+    zIndex: 100,
   },
   modalCard: {
     backgroundColor: colors.white,
@@ -606,6 +710,102 @@ const s = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: fonts.sizes.sm,
     fontWeight: fonts.weights.medium,
+  },
+
+  perfilModalOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+    zIndex: 100,
+  },
+  perfilModalCard: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingTop: 12,
+    maxHeight: '85%',
+  },
+  perfilModalAlca: {
+    width: 40,
+    height: 4,
+    backgroundColor: colors.border,
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+
+  // Modal perfil comportamental
+  perfilHeader: {
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 14,
+    gap: 6,
+  },
+  perfilEmoji: { fontSize: 44 },
+  perfilNome: {
+    fontSize: fonts.sizes.md,
+    fontWeight: fonts.weights.bold,
+    color: colors.text,
+    textAlign: 'center',
+  },
+  perfilBadge: {
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  perfilBadgeTexto: {
+    color: colors.white,
+    fontSize: fonts.sizes.xs,
+    fontWeight: fonts.weights.bold,
+  },
+  perfilJustificativa: {
+    fontSize: fonts.sizes.sm,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: 14,
+  },
+  perfilPillsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 14,
+  },
+  perfilPill: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    padding: 10,
+    alignItems: 'center',
+    gap: 2,
+  },
+  perfilPillLabel: { fontSize: 11, color: colors.textSecondary },
+  perfilPillValor: { fontSize: fonts.sizes.md, fontWeight: fonts.weights.bold, color: colors.text },
+  perfilPillRef:   { fontSize: 10, color: colors.textLight },
+  perfilSecao: {
+    backgroundColor: '#FFF3E0',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+    gap: 6,
+  },
+  perfilSecaoTitulo: {
+    fontSize: fonts.sizes.sm,
+    fontWeight: fonts.weights.bold,
+    color: colors.text,
+  },
+  perfilItem: {
+    fontSize: fonts.sizes.sm,
+    color: colors.text,
+    lineHeight: 20,
+  },
+  perfilDisclaimer: {
+    fontSize: fonts.sizes.xs,
+    color: colors.textLight,
+    textAlign: 'center',
+    marginTop: 12,
+    marginBottom: 4,
   },
 
   // Avaliação

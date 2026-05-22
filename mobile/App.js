@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Animated, ActivityIndicator } from 'react-native';
+import { View, Animated, ActivityIndicator, Platform, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -51,9 +51,38 @@ export default function App() {
     <SafeAreaProvider>
       <AuthProvider>
         <NavigationContainer>
-          <Navegacao />
+          {Platform.OS === 'web' ? (
+            <View style={web.fundo}>
+              <View style={web.container}>
+                <Navegacao />
+              </View>
+            </View>
+          ) : (
+            <Navegacao />
+          )}
         </NavigationContainer>
       </AuthProvider>
     </SafeAreaProvider>
   );
 }
+
+const web = StyleSheet.create({
+  fundo: {
+    flex: 1,
+    backgroundColor: '#1a1a2e',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  container: {
+    width: '100%',
+    maxWidth: 430,
+    height: '100%',
+    maxHeight: 932,
+    overflow: 'hidden',
+    borderRadius: Platform.OS === 'web' ? 16 : 0,
+    shadowColor: '#000',
+    shadowOpacity: 0.4,
+    shadowRadius: 40,
+    shadowOffset: { width: 0, height: 20 },
+  },
+});
