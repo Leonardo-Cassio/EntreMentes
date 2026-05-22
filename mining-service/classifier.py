@@ -7,7 +7,7 @@ import os
 import numpy as np
 import joblib
 
-MODEL_PATH = os.getenv("MODEL_PATH", "../data-analysis/modelo_kmeans.pkl")
+MODEL_PATH = os.getenv("MODEL_PATH", "./modelo_kmeans.pkl")
 
 # Carregado uma única vez ao importar o módulo
 _artefato = joblib.load(MODEL_PATH)

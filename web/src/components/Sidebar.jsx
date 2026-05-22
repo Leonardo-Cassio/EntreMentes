@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import './Sidebar.css';
 
 function IconeDashboard({ cor }) {
@@ -44,21 +46,60 @@ function IconeSair({ cor }) {
 }
 
 const NAV_ITEMS = [
-  { path: '/dashboard', label: 'Dashboard',       Icone: IconeDashboard },
-  { path: '/registro',  label: 'Registrar Humor', Icone: IconeHumor     },
-  { path: '/historico', label: 'Histórico',       Icone: IconeHistorico },
+  { path: '/dashboard',    label: 'Dashboard',       Icone: IconeDashboard    },
+  { path: '/registro',     label: 'Registrar Humor', Icone: IconeHumor        },
+  { path: '/historico',    label: 'Histórico',       Icone: IconeHistorico    },
+  { path: '/estatisticas', label: 'Estatísticas',    Icone: IconeEstatisticas },
+  { path: '/perfil',       label: 'Meu Perfil',      Icone: IconePerfil       },
 ];
+
+function IconePerfil({ cor }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="8" r="4" stroke={cor} strokeWidth="2" />
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke={cor} strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconeEstatisticas({ cor }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <rect x="3"  y="14" width="4" height="7" rx="1" fill={cor} />
+      <rect x="10" y="9"  width="4" height="12" rx="1" fill={cor} />
+      <rect x="17" y="4"  width="4" height="17" rx="1" fill={cor} />
+    </svg>
+  );
+}
+
+function IconeExcluir({ cor }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <polyline points="3 6 5 6 21 6" stroke={cor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M19 6l-1 14H6L5 6" stroke={cor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 11v6M14 11v6" stroke={cor} strokeWidth="2" strokeLinecap="round" />
+      <path d="M9 6V4h6v2" stroke={cor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 export default function Sidebar() {
   const navigate  = useNavigate();
   const location  = useLocation();
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
+  const [modalExcluir, setModalExcluir] = useState(false);
 
   const iniciais = user?.name
     ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : 'US';
 
   const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
+  const handleExcluirConta = async () => {
+    await api.deleteMe(token);
     logout();
     navigate('/login', { replace: true });
   };
@@ -91,11 +132,27 @@ export default function Sidebar() {
           <div className="sidebar-avatar">{iniciais}</div>
           <span className="sidebar-nome">{user?.name ?? 'Usuário'}</span>
         </div>
+        <button className="sidebar-excluir" onClick={() => setModalExcluir(true)}>
+          <IconeExcluir cor="#636E72" />
+          <span>Excluir conta</span>
+        </button>
         <button className="sidebar-sair" onClick={handleLogout}>
           <IconeSair cor="#636E72" />
           <span>Sair</span>
         </button>
       </div>
+
+      {modalExcluir && (
+        <div className="sidebar-modal-overlay" onClick={() => setModalExcluir(false)}>
+          <div className="sidebar-modal" onClick={e => e.stopPropagation()}>
+            <p className="sidebar-modal-texto">Tem certeza de que quer excluir a sua conta?</p>
+            <div className="sidebar-modal-botoes">
+              <button className="sidebar-modal-sim" onClick={handleExcluirConta}>Sim</button>
+              <button className="sidebar-modal-nao" onClick={() => setModalExcluir(false)}>Não</button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

@@ -1,0 +1,177 @@
+.perfil-main {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--surface);
+  padding: 32px 32px 40px;
+}
+
+.perfil-container {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.perfil-page-header {
+  margin-bottom: 4px;
+}
+
+.perfil-titulo {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.perfil-subtitulo {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.perfil-alerta {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.perfil-alerta-sucesso {
+  background: #F0FFF4;
+  color: #276749;
+  border: 1px solid #9AE6B4;
+}
+
+.perfil-alerta-erro {
+  background: #FFF5F5;
+  color: #C53030;
+  border: 1px solid #FEB2B2;
+}
+
+.perfil-card {
+  background: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 24px;
+}
+
+.perfil-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.perfil-avatar-grande {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.perfil-avatar-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.perfil-avatar-nome {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.perfil-avatar-email {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.perfil-card-titulo {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 20px;
+}
+
+.perfil-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.perfil-campos-linha {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.perfil-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.perfil-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.perfil-input {
+  height: 42px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+  background: var(--white);
+}
+
+.perfil-input:focus {
+  border-color: var(--primary);
+}
+
+.perfil-btn-salvar {
+  align-self: flex-start;
+  padding: 10px 24px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 99px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+.perfil-btn-salvar:hover {
+  opacity: 0.88;
+}
+
+.perfil-btn-salvar:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .perfil-main {
+    padding: 20px 16px 32px;
+  }
+
+  .perfil-campos-linha {
+    grid-template-columns: 1fr;
+  }
+}

@@ -43,4 +43,17 @@ export const api = {
     request('/analytics/profile', {
       headers: { Authorization: `Bearer ${token}` },
     }),
+
+  updateMe: (token, data) =>
+    request('/users/me', {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    }),
+
+  deleteMe: (token) =>
+    request('/users/me', {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    }),
 };

@@ -16,12 +16,13 @@ retomar exatamente de onde o anterior parou.
 
 ## Estado atual do desenvolvimento
 
-> **Última atualização:** 2026-05-17 (sessão deploy)
+> **Última atualização:** 2026-05-21 (sessão novas páginas + mining-service Railway)
 > **Sprint 2 apresentada com sucesso — sem objeções dos professores ✅**
 > **Sprint 3 em andamento — todo o Bloco C frontend concluído ✅**
 > **Integração mining-service ↔ backend sem Pub/Sub implementada ✅**
 > **Comentários data-analysis aprimorados para apresentação ✅**
-> **Deploy Railway concluído — backend + PostgreSQL online em produção ✅**
+> **Deploy Railway concluído — backend + PostgreSQL + mining-service online em produção ✅**
+> **Páginas "Meu Perfil" e "Estatísticas" adicionadas ao web ✅**
 
 ---
 
@@ -130,6 +131,17 @@ retomar exatamente de onde o anterior parou.
   - Root Directory configurado para `backend/` nas Settings do serviço
   - `DATABASE_URL` configurada via Variable Reference: `${{Postgres.DATABASE_URL}}`
   - `web/src/services/api.js` e `mobile/src/services/api.js` apontando para URL de produção
+- [x] **D2** Deploy mining-service no Railway ✅ (sessão 21/05)
+  - **URL pública:** `https://zestful-adventure-production-4e44.up.railway.app`
+  - Variável `MINING_SERVICE_URL` no backend atualizada para essa URL
+  - Porta ajustada para usar `PORT` env var injetado pelo Railway
+  - `scikit-learn` fixado em 1.6.1 no `requirements.txt` (model treinado em 1.4.2, 1.8.0 causava `InconsistentVersionWarning`)
+  - A partir dessa sessão: classificação de perfil funciona em produção sem Docker local
+
+**Web — Novas páginas**
+- [x] Botão "Excluir conta" na Sidebar (acima do "Sair") com modal de confirmação ✅
+- [x] Página **Meu Perfil** (`/perfil`) — edição de nome/e-mail e troca de senha ✅
+- [x] Página **Estatísticas** (`/estatisticas`) — 4 cards de resumo + 5 gráficos Recharts ✅
 
 - [ ] Vídeo demonstração (até 5 min, YouTube, todos os membros)
 - [ ] Relatório final do PI
@@ -137,6 +149,40 @@ retomar exatamente de onde o anterior parou.
 ---
 
 ## Histórico de sessões
+
+### Sessão 21/05/2026 — Deploy mining-service + novas páginas web (Leonardo)
+```
+mining-service/app.py                 ← porta ajustada para usar PORT env var do Railway
+mining-service/classifier.py          ← MODEL_PATH padrão → "./modelo_kmeans.pkl"
+mining-service/requirements.txt       ← scikit-learn fixado em 1.6.1 (compat. com modelo)
+mining-service/modelo_kmeans.pkl      ← copiado de data-analysis/ para dentro do serviço
+mining-service/railway.toml           ← NOVO: builder nixpacks, startCommand = "python app.py"
+
+backend/src/services/userService.js   ← NOVO: changePassword() — verifica senha atual (bcrypt),
+                                         salva nova hash
+backend/src/controllers/userController.js ← updateMe() agora aceita currentPassword + newPassword
+                                             para troca de senha; chama changePassword() se fornecidos
+
+web/src/context/AuthContext.jsx        ← NOVO: updateUser() — atualiza user no state + localStorage
+web/src/services/api.js                ← NOVO: updateMe() — PUT /users/me com token
+web/src/components/Sidebar.jsx         ← Botão "Excluir conta" + modal de confirmação;
+                                          ícones IconePerfil e IconeEstatisticas;
+                                          itens de nav "/perfil" e "/estatisticas" adicionados
+web/src/components/Sidebar.css         ← estilos .sidebar-excluir, .sidebar-modal-* adicionados
+web/src/pages/PerfilPage.jsx           ← NOVO: avatar com iniciais, form nome/e-mail, form senha
+web/src/pages/PerfilPage.css           ← NOVO
+web/src/pages/EstatisticasPage.jsx     ← NOVO: 4 cards de resumo (sono, tela, atividade, ansiedade)
+                                          + 5 gráficos: dist. humor, estresse, desempenho acadêmico,
+                                          sono vs tela (linha), atividade física (linha)
+web/src/pages/EstatisticasPage.css     ← NOVO
+web/src/App.jsx                        ← rotas /perfil e /estatisticas adicionadas
+```
+**Variável Railway atualizada:**
+- `MINING_SERVICE_URL` = `https://zestful-adventure-production-4e44.up.railway.app` (serviço mining no Railway)
+
+**A partir desta sessão:** não é mais necessário Docker Desktop nem terminal do backend. Basta `npm run dev` no diretório `web/` para usar o projeto completo (backend + banco + mining-service todos no Railway).
+
+---
 
 ### Sessão 17/05/2026 — Deploy Railway D1 (Leonardo)
 ```
@@ -311,12 +357,13 @@ README.md                                   ← atualizado com tabela de telas e
 | Serviço | URL |
 |---------|-----|
 | API REST (produção) | `https://entrementes-production.up.railway.app` |
+| Mining Service (produção) | `https://zestful-adventure-production-4e44.up.railway.app` |
 | Swagger UI (produção) | `https://entrementes-production.up.railway.app/docs` |
 | Swagger UI (local) | `http://localhost:3000/docs` |
 | Railway dashboard | `https://railway.app` — conta Leonardo |
 
 ### Observações importantes sobre o deploy
-- O **mining-service** (Python/Flask) **não está deployado** — só roda localmente. Em produção, a classificação de perfil falha silenciosamente (try/catch no `classifyService.js`). Para ativar em produção: fazer deploy do mining-service separadamente no Railway e atualizar a variável `MINING_SERVICE_URL`.
+- O **mining-service** está deployado no Railway (`https://zestful-adventure-production-4e44.up.railway.app`). A variável `MINING_SERVICE_URL` no serviço backend aponta para ele. Classificação de perfil funciona em produção.
 - O mobile em `__DEV__` (Expo Go) usa `localhost:3000` automaticamente via `Constants.expoConfig.hostUri`. A URL de produção só é usada em builds de produção.
 - O banco Railway é um PostgreSQL gerenciado — **não rodar `prisma migrate reset`** em produção.
 - Para adicionar migrations futuras: rodar `npx prisma migrate dev --name <nome>` localmente, commitar a nova pasta em `prisma/migrations/`, e o Railway aplica automaticamente no próximo deploy via `prisma migrate deploy` no `npm start`.
@@ -327,11 +374,9 @@ README.md                                   ← atualizado com tabela de telas e
 
 1. **GCP / Pub/Sub** — EM QUARENTENA. Aguardando professor fornecer instruções e acesso ao GCP Console.
 
-2. **Deploy mining-service** — o serviço Python não está em produção. Sem ele, `GET /analytics/profile` retorna 404 para usuários novos (nenhuma classificação é gerada). Opções: deploy no Railway como segundo serviço, ou Railway + Dockerfile Python.
+2. **Vídeo demonstração** — até 5 min, YouTube, com presença dos dois integrantes.
 
-3. **Vídeo demonstração** — até 5 min, YouTube, com presença dos dois integrantes.
-
-4. **Relatório final do PI**.
+3. **Relatório final do PI**.
 
 ---
 
@@ -447,6 +492,8 @@ Comunicação entre serviços: HTTP/REST para operações síncronas + Google Cl
 | Dashboard | `/dashboard` | ✅ | Métricas e gráficos reais (GET /mood), seletor humor com modal, card perfil clicável com modal conectado ao GET /analytics/profile (3 estados), data dinâmica da última avaliação |
 | Registro Diário | `/registro` | ✅ | Sliders, seleções, barra progresso, POST /mood. Recebe nivelHumorInicial via Router state. |
 | Histórico | `/historico` | ✅ | Cards expansíveis, GET /mood integrado |
+| Meu Perfil | `/perfil` | ✅ | Edição de nome/e-mail, troca de senha com validação |
+| Estatísticas | `/estatisticas` | ✅ | 4 cards de resumo + 5 gráficos Recharts (humor, estresse, desempenho, sono vs tela, atividade) |
 
 ### Mobile
 
@@ -627,7 +674,7 @@ Base URL (local): `http://localhost:3000`
 | POST | `/auth/register` | — | Criar conta |
 | POST | `/auth/login` | — | Login, retorna JWT |
 | GET | `/users/me` | JWT | Dados do usuário |
-| PUT | `/users/me` | JWT | Atualizar perfil |
+| PUT | `/users/me` | JWT | Atualizar perfil (name, email, troca de senha via currentPassword+newPassword) |
 | DELETE | `/users/me` | JWT | Deletar conta |
 | POST | `/mood` | JWT | Criar registro de humor |
 | GET | `/mood` | JWT | Listar registros do usuário |
@@ -737,7 +784,8 @@ EntreMentes/
 │
 ├── web/
 │   └── src/
-│       ├── pages/          LoginPage, RegisterPage, DashboardPage, RegistroDiarioPage, HistoricoPage
+│       ├── pages/          LoginPage, RegisterPage, DashboardPage, RegistroDiarioPage,
+│       │                   HistoricoPage, PerfilPage, EstatisticasPage
 │       ├── components/     Input, Button, Sidebar
 │       ├── context/        AuthContext.jsx
 │       ├── services/       api.js
