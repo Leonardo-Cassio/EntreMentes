@@ -11,12 +11,20 @@ exports.getMe = async (req, res) => {
 
 exports.updateMe = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, currentPassword, newPassword } = req.body;
+
+    if (newPassword) {
+      await userService.changePassword(req.userId, currentPassword || '', newPassword);
+    }
+
     const data = {};
     if (name !== undefined) data.name = name;
     if (email !== undefined) data.email = email;
 
-    const user = await userService.update(req.userId, data);
+    const user = Object.keys(data).length
+      ? await userService.update(req.userId, data)
+      : await userService.getById(req.userId);
+
     res.json({ success: true, data: user, message: "Perfil atualizado com sucesso" });
   } catch (err) {
     res.status(400).json({ success: false, data: null, message: err.message });

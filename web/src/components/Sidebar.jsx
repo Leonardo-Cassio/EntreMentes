@@ -46,10 +46,31 @@ function IconeSair({ cor }) {
 }
 
 const NAV_ITEMS = [
-  { path: '/dashboard', label: 'Dashboard',       Icone: IconeDashboard },
-  { path: '/registro',  label: 'Registrar Humor', Icone: IconeHumor     },
-  { path: '/historico', label: 'Histórico',       Icone: IconeHistorico },
+  { path: '/dashboard',    label: 'Dashboard',       Icone: IconeDashboard    },
+  { path: '/registro',     label: 'Registrar Humor', Icone: IconeHumor        },
+  { path: '/historico',    label: 'Histórico',       Icone: IconeHistorico    },
+  { path: '/estatisticas', label: 'Estatísticas',    Icone: IconeEstatisticas },
+  { path: '/perfil',       label: 'Meu Perfil',      Icone: IconePerfil       },
 ];
+
+function IconePerfil({ cor }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="8" r="4" stroke={cor} strokeWidth="2" />
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke={cor} strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconeEstatisticas({ cor }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <rect x="3"  y="14" width="4" height="7" rx="1" fill={cor} />
+      <rect x="10" y="9"  width="4" height="12" rx="1" fill={cor} />
+      <rect x="17" y="4"  width="4" height="17" rx="1" fill={cor} />
+    </svg>
+  );
+}
 
 function IconeExcluir({ cor }) {
   return (

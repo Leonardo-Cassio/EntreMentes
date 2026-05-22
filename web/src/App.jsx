@@ -5,6 +5,8 @@ import RegisterPage       from './pages/RegisterPage';
 import DashboardPage      from './pages/DashboardPage';
 import RegistroDiarioPage from './pages/RegistroDiarioPage';
 import HistoricoPage      from './pages/HistoricoPage';
+import PerfilPage         from './pages/PerfilPage';
+import EstatisticasPage   from './pages/EstatisticasPage';
 import './App.css';
 
 function RotaProtegida({ children }) {
@@ -26,8 +28,10 @@ function Rotas() {
       <Route path="/register"  element={<RotaPublica><RegisterPage /></RotaPublica>} />
       <Route path="/dashboard" element={<RotaProtegida><DashboardPage /></RotaProtegida>} />
       <Route path="/registro"  element={<RotaProtegida><RegistroDiarioPage /></RotaProtegida>} />
-      <Route path="/historico" element={<RotaProtegida><HistoricoPage /></RotaProtegida>} />
-      <Route path="*"          element={<Navigate to="/login" replace />} />
+      <Route path="/historico"   element={<RotaProtegida><HistoricoPage /></RotaProtegida>} />
+      <Route path="/perfil"      element={<RotaProtegida><PerfilPage /></RotaProtegida>} />
+      <Route path="/estatisticas" element={<RotaProtegida><EstatisticasPage /></RotaProtegida>} />
+      <Route path="*"            element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
