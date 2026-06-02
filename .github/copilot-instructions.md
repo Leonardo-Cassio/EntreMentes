@@ -16,7 +16,7 @@ retomar exatamente de onde o anterior parou.
 
 ## Estado atual do desenvolvimento
 
-> **Última atualização:** 2026-06-01 (sessão relatório final + PDF + roteiro vídeo — Gabriel)
+> **Última atualização:** 2026-06-02 (sessão análise BullMQ + Redis como alternativa ao GCP Pub/Sub — Gabriel)
 > **Sprint 2 apresentada com sucesso — sem objeções dos professores ✅**
 > **Sprint 3 em andamento — todo o Bloco C frontend concluído ✅**
 > **Integração mining-service ↔ backend sem Pub/Sub implementada ✅**
@@ -161,6 +161,18 @@ retomar exatamente de onde o anterior parou.
 ---
 
 ## Histórico de sessões
+
+### Sessão 02/06/2026 — Análise BullMQ + Redis e consulta ao professor (Gabriel)
+```
+Nenhum arquivo criado ou modificado nesta sessão.
+Sessão de análise e decisão arquitetural.
+```
+- Professor liberou Computação em Nuvem II para escolha livre (exige Pub/Sub + nuvem)
+- Analisou solução proposta pelo Leonardo: BullMQ + Redis no Railway
+- Conclusão: tecnicamente sólida, implementa o mesmo padrão Pub/Sub, sem dependências externas
+- Risco identificado: se professor exigir especificamente GCP Pub/Sub, perder pontos
+- Ação tomada: mensagem enviada ao professor para confirmar se BullMQ + Redis é aceito
+- Implementação aguarda resposta. Plano completo de implementação documentado nas pendências acima.
 
 ### Sessão 01/06/2026 — Relatório Final + PDF + Roteiro Vídeo (Gabriel)
 ```
@@ -444,9 +456,24 @@ README.md                                   ← atualizado com tabela de telas e
    - Markdown: `Documentação/Relatorio_Final_PI.md`
    - PDF: `Documentação/Relatorio_Final_PI.pdf`
 
-3. **GCP / Pub/Sub** — EM QUARENTENA. Aguardando professor fornecer instruções e acesso ao GCP Console.
-   - Arquitetura planejada e documentada no relatório final (seção 6.6)
-   - Integração atual (HTTP direto via classifyService.js) funciona em produção como solução interim
+3. **Mensageria (Pub/Sub)** — ⏳ AGUARDANDO RESPOSTA DO PROFESSOR.
+   - Professor liberou a disciplina de Computação em Nuvem II para fazer "do jeito que quiser", exige Pub/Sub + nuvem
+   - **Solução proposta:** BullMQ + Redis no Railway (sem GCP, sem cartão de crédito, sem JSON de credenciais)
+     - BullMQ é uma biblioteca Node.js; Redis é o broker da fila
+     - Railway já oferece Redis gerenciado nativo (igual ao PostgreSQL que já usamos)
+     - Bull Board como painel visual em `/admin/queues` — mostra jobs waiting/active/completed/failed em tempo real
+     - Implementa o mesmo padrão Pub/Sub: publisher → fila → worker/consumer
+   - **Mensagem enviada ao professor (02/06):**
+     > "Professor, para a disciplina de Computação em Nuvem II, planejamos implementar mensageria assíncrona utilizando BullMQ + Redis hospedados no Railway (PaaS), como alternativa ao Google Cloud Pub/Sub. O padrão é o mesmo: publisher deposita a mensagem na fila, o broker (Redis) garante a entrega, e um worker consome e processa de forma assíncrona — com painel visual de monitoramento (Bull Board) demonstrando as mensagens em tempo real. Essa abordagem atende aos critérios de nuvem e Pub/Sub da disciplina, ou é necessário utilizar especificamente o Google Cloud Pub/Sub?"
+   - **Aguardando aprovação.** Após resposta positiva, implementar BullMQ (estimativa: ~4h em dupla):
+     1. Adicionar Redis no Railway (2 cliques)
+     2. `npm install bullmq` no backend
+     3. `backend/src/queues/classifyQueue.js` — define a fila
+     4. `backend/src/workers/classifyWorker.js` — lógica atual do classifyService.js
+     5. `backend/src/services/classifyService.js` — vira publisher (adiciona job na fila)
+     6. `backend/src/server.js` — Bull Board em `/admin/queues` + inicializa worker
+     7. Variável `REDIS_URL` nas envs do Railway
+   - **moodController.js não muda** — continua chamando `classifyService.classificarEAtualizar()` igual hoje
 
 ---
 
