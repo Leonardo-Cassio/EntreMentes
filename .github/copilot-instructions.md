@@ -16,13 +16,15 @@ retomar exatamente de onde o anterior parou.
 
 ## Estado atual do desenvolvimento
 
-> **Última atualização:** 2026-05-21 (sessão novas páginas + mining-service Railway)
+> **Última atualização:** 2026-06-01 (sessão relatório final + PDF + roteiro vídeo — Gabriel)
 > **Sprint 2 apresentada com sucesso — sem objeções dos professores ✅**
 > **Sprint 3 em andamento — todo o Bloco C frontend concluído ✅**
 > **Integração mining-service ↔ backend sem Pub/Sub implementada ✅**
 > **Comentários data-analysis aprimorados para apresentação ✅**
 > **Deploy Railway concluído — backend + PostgreSQL + mining-service online em produção ✅**
 > **Páginas "Meu Perfil" e "Estatísticas" adicionadas ao web ✅**
+> **Relatório Final do PI criado e exportado como PDF ✅**
+> **Roteiro do vídeo de demonstração criado ✅**
 
 ---
 
@@ -118,6 +120,9 @@ retomar exatamente de onde o anterior parou.
 **Data Analysis**
 - [x] Comentários de `preprocessing.py` aprimorados para apresentação (cada etapa explica o "porquê" técnico)
 - [x] Comentários de `kmeans_clustering.py` aprimorados (cotovelo, silhouette, k-means++, rotulagem, radar chart)
+- [x] **Entrega "Extração de Padrões"** (entregue 19/05, prazo 21/05) — `extracao_padroes.ipynb` executado com outputs + `relatorio_extracao_padroes.md`
+  - Algoritmos: K-Means K=4 k-means++ (principal) + Decision Tree max_depth=3 (extração de regras IF-THEN)
+  - Novo gráfico: `graficos/10_arvore_decisao.png`
 
 **Documentação**
 - [x] **A3** Swagger UI — spec OpenAPI 3.0 em `backend/src/docs/swagger.js`, comentários JSDoc em todas as rotas, Swagger UI montado em `/docs` via `swagger-ui-express`
@@ -143,12 +148,56 @@ retomar exatamente de onde o anterior parou.
 - [x] Página **Meu Perfil** (`/perfil`) — edição de nome/e-mail e troca de senha ✅
 - [x] Página **Estatísticas** (`/estatisticas`) — 4 cards de resumo + 5 gráficos Recharts ✅
 
+**Mobile — Novas telas (sessão 21/05, Leonardo)**
+- [x] `EstatisticasScreen.js` — equivalente à web: cards de resumo + gráficos
+- [x] `PerfilScreen.js` — edição de perfil + troca de senha + excluir conta
+- [x] `DashboardScreen.js` — refatorado com dados reais
+- [x] `AppTabs.js` — navegação atualizada para novas telas
+- [x] `mobile/src/services/api.js` — `updateMe`, `deleteMe` adicionados; fix URL: quando `expo --web` usa produção
+
 - [ ] Vídeo demonstração (até 5 min, YouTube, todos os membros)
-- [ ] Relatório final do PI
+- [x] Relatório final do PI → `Documentação/Relatorio_Final_PI.md` ✅ (criado em 01/06/2026)
 
 ---
 
 ## Histórico de sessões
+
+### Sessão 01/06/2026 — Relatório Final + PDF + Roteiro Vídeo (Gabriel)
+```
+Documentação/Relatorio_Final_PI.md  ← NOVO: relatório final completo do PI (~10 páginas, PT-BR)
+                                       Cobre as 3 disciplinas do 6º semestre:
+                                       - Lab Dev Multiplataforma: arquitetura, backend (todos endpoints),
+                                         web (7 telas), mobile (8 telas), mining service
+                                       - Computação em Nuvem II: Railway (3 serviços), nixpacks,
+                                         alta disponibilidade, HTTPS, variáveis de ambiente, Pub/Sub planejado
+                                       - Mineração de Dados: pipeline EDA→pré-proc→K-Means K=4→Decision Tree,
+                                         4 perfis com centroides, integração em produção
+                                       10 seções: Resumo, Introdução, Escopo/RFs, Arquitetura, Dev Multiplataforma,
+                                       Nuvem, Mineração, Sprint History, Resultados, Referências
+
+Documentação/Relatorio_Final_PI.pdf ← NOVO: PDF gerado via xhtml2pdf + markdown
+                                       Estilo acadêmico: tipografia Arial, tabelas com header roxo (#7B2FBE),
+                                       código com borda lateral, rodapé automático em todas as páginas
+                                       Tamanho: 70.6 KB
+
+Documentação/Roteiro_Video_PI.md    ← NOVO: roteiro completo do vídeo de demonstração (~4:50 min)
+                                       Divisão: Leonardo fala (narração), Gabriel mostra (tela)
+                                       7 blocos: abertura → contexto → demo web → demo mobile →
+                                       nuvem/swagger → mineração → encerramento
+                                       Inclui falas exatas, ações de tela, checklist pré e pós-gravação,
+                                       título/descrição do YouTube e link do formulário de entrega
+```
+Manual lido: MANUAL PI - DSM - v03 - 2025.pdf (24 páginas).
+Critérios de avaliação das 3 disciplinas do 6º semestre extraídos.
+Entrega final do PI: formulário https://forms.office.com/r/nknRMxzwzN (link GitHub + link YouTube)
+
+### Sessão 21/05/2026 — Revisão alterações Leonardo + resolução conflito merge (Gabriel)
+```
+web/src/services/api.js   ← conflito resolvido: mantida versão com VITE_API_URL env var
+                             (Leonardo tinha hardcoded URL de produção; env var é a correta
+                             pois funciona em dev e prod sem quebrar ninguém)
+```
+Revisão de todos os commits do Leonardo (57635a2 → 4448356). Sem alterações de código além do merge.
 
 ### Sessão 21/05/2026 — Deploy mining-service + novas páginas web (Leonardo)
 ```
@@ -183,6 +232,16 @@ web/src/App.jsx                        ← rotas /perfil e /estatisticas adicion
 **A partir desta sessão:** não é mais necessário Docker Desktop nem terminal do backend. Basta `npm run dev` no diretório `web/` para usar o projeto completo (backend + banco + mining-service todos no Railway).
 
 ---
+
+### Sessão 19/05/2026 — Entrega "Extração de Padrões" (Gabriel)
+```
+data-analysis/extracao_padroes.ipynb         ← NOVO: notebook executado com outputs inline
+data-analysis/relatorio_extracao_padroes.md  ← NOVO: relatório da etapa para entrega no Teams
+data-analysis/graficos/10_arvore_decisao.png ← NOVO: árvore de decisão (regras dos clusters)
+```
+Entrega da atividade de Mineração de Dados — prazo 21/05. Dois algoritmos: K-Means K=4 (clustering
+não supervisionado) + Decision Tree max_depth=3 (extração de regras IF-THEN interpretáveis).
+Jupyter instalado via pip; notebook executado com `nbconvert --execute --inplace`. Entregue no Teams.
 
 ### Sessão 17/05/2026 — Deploy Railway D1 (Leonardo)
 ```
@@ -372,11 +431,22 @@ README.md                                   ← atualizado com tabela de telas e
 
 ## Pendências para próxima sessão
 
-1. **GCP / Pub/Sub** — EM QUARENTENA. Aguardando professor fornecer instruções e acesso ao GCP Console.
+1. **Vídeo demonstração** — ⚠️ ÚLTIMA PENDÊNCIA CRÍTICA.
+   - Gravar usando o roteiro em `Documentação/Roteiro_Video_PI.md`
+   - Leonardo narra, Gabriel mostra a tela (web + mobile)
+   - Publicar no YouTube como **Público**
+   - Título: `EntreMentes — PI 6º Semestre DSM FATEC Franca 2026`
+   - Após publicar:
+     a) Adicionar link no `README.md` raiz do repositório
+     b) Preencher formulário de entrega: https://forms.office.com/r/nknRMxzwzN
 
-2. **Vídeo demonstração** — até 5 min, YouTube, com presença dos dois integrantes.
+2. ~~**Relatório final do PI**~~ — ✅ CONCLUÍDO em 01/06/2026.
+   - Markdown: `Documentação/Relatorio_Final_PI.md`
+   - PDF: `Documentação/Relatorio_Final_PI.pdf`
 
-3. **Relatório final do PI**.
+3. **GCP / Pub/Sub** — EM QUARENTENA. Aguardando professor fornecer instruções e acesso ao GCP Console.
+   - Arquitetura planejada e documentada no relatório final (seção 6.6)
+   - Integração atual (HTTP direto via classifyService.js) funciona em produção como solução interim
 
 ---
 
