@@ -7,7 +7,7 @@
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: background-color 0.2s, opacity 0.2s;
+  transition: filter 0.2s, opacity 0.2s, transform 0.15s;
 }
 
 .btn:disabled {
@@ -16,12 +16,12 @@
 }
 
 .btn-primary {
-  background: var(--primary);
+  background: var(--primary-gradient);
   color: var(--white);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--primary-dark);
+  filter: brightness(0.9);
 }
 
 .btn-outline {

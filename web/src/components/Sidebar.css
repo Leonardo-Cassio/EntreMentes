@@ -19,7 +19,7 @@
 .sidebar-logo-icon {
   width: 36px;
   height: 36px;
-  background: var(--primary);
+  background: var(--primary-gradient);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -91,7 +91,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--primary-gradient);
   color: #fff;
   font-size: 13px;
   font-weight: 700;

@@ -4,6 +4,9 @@
   --primary: #6C5CE7;
   --primary-dark: #5A4BD1;
   --primary-light: #A29BFE;
+  /* Gradiente roxo fechado — use em todos os botões e elementos de destaque */
+  --primary-gradient: linear-gradient(135deg, #4A3ABB 0%, #6C5CE7 55%, #8B7CF6 100%);
+  --primary-gradient-h: linear-gradient(90deg, #4A3ABB 0%, #6C5CE7 55%, #8B7CF6 100%);
   --bg: #FFFFFF;
   --surface: #F8F9FA;
   --text: #2D3436;

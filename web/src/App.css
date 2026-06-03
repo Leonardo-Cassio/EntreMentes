@@ -48,7 +48,7 @@
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: var(--primary);
+  background: var(--primary-gradient);
   display: flex;
   align-items: center;
   justify-content: center;

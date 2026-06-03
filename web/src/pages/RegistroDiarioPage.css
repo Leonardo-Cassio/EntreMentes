@@ -64,7 +64,7 @@
 
 .progresso-fill {
   height: 100%;
-  background: var(--primary);
+  background: var(--primary-gradient-h);
   border-radius: 99px;
   transition: width 0.3s ease;
 }
@@ -264,9 +264,9 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--primary);
+  background: linear-gradient(135deg, #4A3ABB 0%, #8B7CF6 100%);
   border: 2px solid #fff;
-  box-shadow: 0 1px 4px rgba(108, 92, 231, 0.4);
+  box-shadow: 0 1px 4px rgba(74, 58, 187, 0.45);
   cursor: pointer;
   transition: transform 0.1s;
 }
@@ -327,7 +327,7 @@
 .salvar-btn {
   width: 100%;
   padding: 16px;
-  background: var(--primary);
+  background: var(--primary-gradient);
   color: #fff;
   border: none;
   border-radius: 12px;
@@ -335,12 +335,12 @@
   font-weight: 700;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.15s, transform 0.1s, opacity 0.15s;
+  transition: filter 0.2s, transform 0.15s, opacity 0.15s;
   margin-top: 8px;
 }
 
 .salvar-btn:hover:not(.desabilitado) {
-  background: var(--primary-dark);
+  filter: brightness(0.9);
   transform: translateY(-1px);
 }
 

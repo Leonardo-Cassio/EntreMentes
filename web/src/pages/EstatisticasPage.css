@@ -30,7 +30,8 @@
   margin: 0;
 }
 
-/* Estado vazio / carregando */
+/* ── Estado vazio / carregando ───────────────────────────────────────────── */
+
 .est-estado {
   display: flex;
   flex-direction: column;
@@ -42,8 +43,15 @@
   font-size: 14px;
 }
 
-.est-estado-icone {
-  font-size: 48px;
+.est-vazio-icone {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(108, 92, 231, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
 }
 
 .est-vazio-titulo {
@@ -71,7 +79,8 @@
   to { transform: rotate(360deg); }
 }
 
-/* Summary cards */
+/* ── Summary cards ───────────────────────────────────────────────────────── */
+
 .est-summary-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -88,8 +97,16 @@
   gap: 14px;
 }
 
+/* Caixa do ícone SVG — substitui o emoji */
 .est-summary-icone {
-  font-size: 28px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(108, 92, 231, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
   flex-shrink: 0;
 }
 
@@ -109,22 +126,18 @@
 .est-summary-valor {
   font-size: 20px;
   font-weight: 700;
-  color: var(--text);
+  color: var(--primary);
   margin: 0;
 }
 
 .est-summary-sub {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: var(--text-light);
   margin: 0;
 }
 
-.est-summary-roxo   .est-summary-valor { color: #6C5CE7; }
-.est-summary-azul   .est-summary-valor { color: #0984E3; }
-.est-summary-verde  .est-summary-valor { color: #00B894; }
-.est-summary-laranja .est-summary-valor { color: #E17055; }
+/* ── Chart cards ─────────────────────────────────────────────────────────── */
 
-/* Chart cards */
 .est-charts-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -161,14 +174,15 @@
   color: var(--text-secondary);
 }
 
-/* Tooltip */
+/* ── Tooltip ─────────────────────────────────────────────────────────────── */
+
 .est-tooltip {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 8px 12px;
   font-size: 13px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .est-tooltip-label {
@@ -182,7 +196,8 @@
   font-weight: 500;
 }
 
-/* Legenda */
+/* ── Legenda ─────────────────────────────────────────────────────────────── */
+
 .est-legenda {
   display: flex;
   gap: 16px;
@@ -206,7 +221,8 @@
   flex-shrink: 0;
 }
 
-/* Disclaimer */
+/* ── Disclaimer ──────────────────────────────────────────────────────────── */
+
 .est-disclaimer {
   font-size: 12px;
   color: var(--text-secondary);
@@ -214,6 +230,8 @@
   padding: 8px 0 4px;
   margin: 0;
 }
+
+/* ── Responsivo ──────────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
   .est-main {

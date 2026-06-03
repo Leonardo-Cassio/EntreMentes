@@ -16,7 +16,7 @@ retomar exatamente de onde o anterior parou.
 
 ## Estado atual do desenvolvimento
 
-> **Última atualização:** 2026-06-02 (sessão análise BullMQ + Redis como alternativa ao GCP Pub/Sub — Gabriel)
+> **Última atualização:** 2026-06-02 (sessão redesign visual web + mobile Railway fix — Gabriel)
 > **Sprint 2 apresentada com sucesso — sem objeções dos professores ✅**
 > **Sprint 3 em andamento — todo o Bloco C frontend concluído ✅**
 > **Integração mining-service ↔ backend sem Pub/Sub implementada ✅**
@@ -25,6 +25,8 @@ retomar exatamente de onde o anterior parou.
 > **Páginas "Meu Perfil" e "Estatísticas" adicionadas ao web ✅**
 > **Relatório Final do PI criado e exportado como PDF ✅**
 > **Roteiro do vídeo de demonstração criado ✅**
+> **Redesign visual Dashboard e Estatísticas concluído ✅**
+> **Mobile apontando para Railway em todos os ambientes ✅**
 
 ---
 
@@ -161,6 +163,44 @@ retomar exatamente de onde o anterior parou.
 ---
 
 ## Histórico de sessões
+
+### Sessão 02/06/2026 — Redesign visual web + mobile Railway fix (Gabriel)
+```
+mobile/src/services/api.js          ← SIMPLIFICADO: removida lógica de detecção de ambiente
+                                       (Constants, Platform, __DEV__); agora aponta sempre para
+                                       Railway: 'https://entrementes-production.up.railway.app'
+
+web/src/pages/EstatisticasPage.jsx  ← REDESENHADO: emojis dos cards → ícones SVG (lua, monitor,
+                                       atividade, alerta); paleta harmonizada com roxo primário;
+                                       gráficos com escala de opacidade do roxo (humor),
+                                       variações do roxo (estresse, desempenho);
+                                       linhas tela e atividade agora em #A29BFE e #5A4BD1
+
+web/src/pages/EstatisticasPage.css  ← REDESENHADO: ícone como container colorido (rgba primário),
+                                       removidos os 4 temas de cor dos cards de resumo,
+                                       todos os valores em var(--primary)
+
+web/src/pages/DashboardPage.jsx     ← REDESENHADO:
+                                       - Cards de métricas: emoji → ícones SVG (smile, calendário,
+                                         trending-up, user); valores 24px font-weight 800;
+                                         "Ver detalhes" virou pill button com seta SVG
+                                       - Emojis de humor: menores (22px, opacity 0.85),
+                                         fundo neutro branco em todos os cards,
+                                         hover/ativo unificado em roxo primário
+                                       - AreaChart com gradiente translúcido (era LineChart)
+                                       - Eixo X mostra datas reais ("01 jun", "05 jun")
+                                       - Cards de gráfico clicáveis: hover scale(1.018) +
+                                         sombra; click abre modal com gráfico expandido
+                                       - Modal de gráfico: AreaChart 360px com dots visíveis
+                                         (evolução) ou BarChart 360px com labels nos valores
+                                         (dia da semana)
+
+web/src/pages/DashboardPage.css     ← REDESENHADO: fundo #F1F3F5, cards border-radius 20px,
+                                       box-shadow suave, .chart-card-interativo com hover,
+                                       .grafico-modal com header/corpo/fechar
+```
+Tentativa de triângulos geométricos como ícones de humor (descartada pelo usuário — voltou para emojis menores e mais sutis).
+Próxima sessão: continuar melhorias visuais no web.
 
 ### Sessão 02/06/2026 — Análise BullMQ + Redis e consulta ao professor (Gabriel)
 ```

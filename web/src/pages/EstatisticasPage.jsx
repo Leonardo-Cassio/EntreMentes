@@ -8,10 +8,64 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import './EstatisticasPage.css';
 
-const HUMOR_LABELS  = { 1: 'Muito mal', 2: 'Mal', 3: 'Neutro', 4: 'Bem', 5: 'Muito bem' };
-const HUMOR_EMOJIS  = { 1: '😢', 2: '😟', 3: '😐', 4: '🙂', 5: '😄' };
-const ESTRESSE_COR  = { Baixo: '#00B894', Medio: '#FDCB6E', Alto: '#E17055' };
-const DESEMPENHO_COR = { Melhorou: '#00B894', Mesmo: '#74B9FF', Piorou: '#E17055' };
+const HUMOR_LABELS = { 1: 'Muito mal', 2: 'Mal', 3: 'Neutro', 4: 'Bem', 5: 'Muito bem' };
+
+// Escala de opacidade do roxo primário — do mais claro (ruim) ao mais intenso (ótimo)
+const HUMOR_CORES = [
+  'rgba(108, 92, 231, 0.2)',
+  'rgba(108, 92, 231, 0.4)',
+  'rgba(108, 92, 231, 0.6)',
+  'rgba(108, 92, 231, 0.8)',
+  'rgba(108, 92, 231, 1.0)',
+];
+
+// Variações do roxo primário para estresse e desempenho
+const ESTRESSE_COR   = { Baixo: '#A29BFE', Medio: '#6C5CE7', Alto: '#5A4BD1' };
+const DESEMPENHO_COR = { Melhorou: '#6C5CE7', Mesmo: '#B2BEC3', Piorou: '#DFE6E9' };
+
+// ── Ícones SVG inline ─────────────────────────────────────────────────────────
+
+function IconeSono() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
+
+function IconeTela() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+      <line x1="8" y1="21" x2="16" y2="21" />
+      <line x1="12" y1="17" x2="12" y2="21" />
+    </svg>
+  );
+}
+
+function IconeAtividade() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+    </svg>
+  );
+}
+
+function IconeAnsiedade() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+  );
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function media(arr) {
   if (!arr.length) return 0;
@@ -29,7 +83,7 @@ function calcularEstatisticas(registros) {
   );
 
   const distHumor = [1, 2, 3, 4, 5].map(n => ({
-    label: `${HUMOR_EMOJIS[n]} ${HUMOR_LABELS[n]}`,
+    label: HUMOR_LABELS[n],
     count: registros.filter(r => r.nivelHumor === n).length,
   }));
 
@@ -68,9 +122,9 @@ function TooltipPersonalizado({ active, payload, label }) {
   );
 }
 
-function CardSummary({ icone, label, valor, sub, cor }) {
+function CardSummary({ icone, label, valor, sub }) {
   return (
-    <div className={`est-summary-card est-summary-${cor}`}>
+    <div className="est-summary-card">
       <div className="est-summary-icone">{icone}</div>
       <div className="est-summary-info">
         <p className="est-summary-label">{label}</p>
@@ -80,6 +134,8 @@ function CardSummary({ icone, label, valor, sub, cor }) {
     </div>
   );
 }
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function EstatisticasPage() {
   const { token } = useAuth();
@@ -119,24 +175,31 @@ export default function EstatisticasPage() {
             </div>
           ) : erro ? (
             <div className="est-estado">
-              <span className="est-estado-icone">⚠️</span>
-              <p>{erro}</p>
+              <span>⚠️ {erro}</span>
             </div>
           ) : !stats ? (
             <div className="est-estado">
-              <span className="est-estado-icone">📊</span>
+              <div className="est-vazio-icone">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" />
+                  <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+              </div>
               <p className="est-vazio-titulo">Sem dados ainda</p>
               <p className="est-vazio-sub">Faça pelo menos um registro de humor para ver suas estatísticas.</p>
             </div>
           ) : (
             <>
+              {/* Cards de resumo */}
               <div className="est-summary-grid">
-                <CardSummary icone="🌙" label="Sono médio"       valor={`${stats.sonoMedio.toFixed(1)}h`}      sub="ideal: 7–9h"     cor="roxo"    />
-                <CardSummary icone="🖥️" label="Tela média"        valor={`${stats.telaMedio.toFixed(1)}h/dia`}  sub="ideal: < 6h"     cor="azul"    />
-                <CardSummary icone="🏃" label="Atividade física"  valor={`${stats.atividadeMedio.toFixed(1)}h`} sub="por registro"    cor="verde"   />
-                <CardSummary icone="😰" label="Taxa de ansiedade" valor={`${stats.taxaAnsiedade}%`}             sub="antes de provas" cor="laranja" />
+                <CardSummary icone={<IconeSono />}      label="Sono médio"       valor={`${stats.sonoMedio.toFixed(1)}h`}      sub="ideal: 7–9h"     />
+                <CardSummary icone={<IconeTela />}      label="Tela média"       valor={`${stats.telaMedio.toFixed(1)}h/dia`}  sub="ideal: < 6h"     />
+                <CardSummary icone={<IconeAtividade />} label="Atividade física" valor={`${stats.atividadeMedio.toFixed(1)}h`} sub="por registro"    />
+                <CardSummary icone={<IconeAnsiedade />} label="Ansiedade"        valor={`${stats.taxaAnsiedade}%`}             sub="antes de provas" />
               </div>
 
+              {/* Linha 1 de gráficos */}
               <div className="est-charts-grid">
                 <div className="est-chart-card">
                   <div className="est-chart-header">
@@ -151,7 +214,7 @@ export default function EstatisticasPage() {
                       <Tooltip content={<TooltipPersonalizado />} />
                       <Bar dataKey="count" name="Registros" radius={[6, 6, 0, 0]} maxBarSize={40}>
                         {stats.distHumor.map((_, i) => (
-                          <Cell key={i} fill={['#E17055', '#FDCB6E', '#B2BEC3', '#74B9FF', '#00B894'][i]} />
+                          <Cell key={i} fill={HUMOR_CORES[i]} />
                         ))}
                       </Bar>
                     </BarChart>
@@ -179,6 +242,7 @@ export default function EstatisticasPage() {
                 </div>
               </div>
 
+              {/* Linha 2 de gráficos */}
               <div className="est-charts-grid">
                 <div className="est-chart-card">
                   <div className="est-chart-header">
@@ -211,17 +275,18 @@ export default function EstatisticasPage() {
                       <XAxis dataKey="dia" tick={{ fontSize: 11, fill: '#B2BEC3' }} tickLine={false} axisLine={false} interval={4} />
                       <YAxis tick={{ fontSize: 11, fill: '#B2BEC3' }} tickLine={false} axisLine={false} />
                       <Tooltip content={<TooltipPersonalizado />} />
-                      <Line type="monotone" dataKey="sono" name="Sono (h)" stroke="#6C5CE7" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="tela" name="Tela (h)" stroke="#E17055" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="sono" name="Sono (h)"  stroke="#6C5CE7" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="tela" name="Tela (h)"  stroke="#A29BFE" strokeWidth={2} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                   <div className="est-legenda">
                     <span className="est-legenda-item"><span className="est-legenda-cor" style={{ background: '#6C5CE7' }} /> Sono</span>
-                    <span className="est-legenda-item"><span className="est-legenda-cor" style={{ background: '#E17055' }} /> Tela</span>
+                    <span className="est-legenda-item"><span className="est-legenda-cor" style={{ background: '#A29BFE' }} /> Tela</span>
                   </div>
                 </div>
               </div>
 
+              {/* Gráfico largo */}
               <div className="est-chart-card est-chart-full">
                 <div className="est-chart-header">
                   <h2 className="est-chart-titulo">Atividade Física ao Longo do Tempo</h2>
@@ -233,7 +298,9 @@ export default function EstatisticasPage() {
                     <XAxis dataKey="dia" tick={{ fontSize: 11, fill: '#B2BEC3' }} tickLine={false} axisLine={false} interval={4} />
                     <YAxis tick={{ fontSize: 11, fill: '#B2BEC3' }} tickLine={false} axisLine={false} />
                     <Tooltip content={<TooltipPersonalizado />} />
-                    <Line type="monotone" dataKey="atividade" name="Atividade (h)" stroke="#00B894" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: '#00B894', stroke: '#fff', strokeWidth: 2 }} />
+                    <Line type="monotone" dataKey="atividade" name="Atividade (h)"
+                      stroke="#5A4BD1" strokeWidth={2.5} dot={false}
+                      activeDot={{ r: 5, fill: '#5A4BD1', stroke: '#fff', strokeWidth: 2 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
