@@ -9,7 +9,7 @@
 **Grupo:** Gabriel Fillip | Leonardo Cássio  
 **Professor Responsável (Disciplina-Chave):** Prof. Me. Alexandre Gomes  
 **Repositório GitHub:** https://github.com/Leonardo-Cassio/EntreMentes  
-**Vídeo Demonstração (YouTube):** _[link a ser adicionado após gravação]_
+**Vídeo Demonstração (YouTube):** https://youtu.be/p0qlAkJlquc
 
 ---
 
@@ -32,9 +32,9 @@
 
 O **EntreMentes** é uma plataforma digital de monitoramento de saúde mental e bem-estar acadêmico voltada a estudantes universitários. Desenvolvida ao longo do 6º semestre do curso de DSM na FATEC Franca, a plataforma permite que estudantes registrem diariamente seu estado emocional e hábitos de vida (sono, tempo de tela, exercício físico, nível de estresse), e aplica algoritmos de mineração de dados para identificar automaticamente o perfil comportamental de cada usuário, fornecendo insights personalizados.
 
-O sistema é composto por três camadas integradas: uma API REST em Node.js com Express e Prisma (backend), uma interface web em React com Vite (frontend web) e um aplicativo mobile em React Native com Expo SDK 54 (frontend mobile). Um quarto serviço independente em Python/Flask executa a classificação por K-Means. Toda a infraestrutura está implantada na plataforma em nuvem Railway.
+O sistema é composto por quatro camadas integradas: uma API REST em Node.js com Express e Prisma (backend), uma interface web em React com Vite (frontend web), um aplicativo mobile em React Native com Expo SDK 54 (frontend mobile) e um serviço independente em Python/Flask para classificação por K-Means. A comunicação entre o backend e o serviço de mineração é assíncrona via fila de mensagens **BullMQ + Redis**, garantindo que o usuário nunca aguarde a classificação ao salvar um registro. Toda a infraestrutura — API, mining-service, PostgreSQL e Redis — está implantada na plataforma em nuvem Railway com HTTPS, restart automático e deploy contínuo via GitHub.
 
-**Tecnologias principais:** Node.js, Express, Prisma, PostgreSQL, React, React Native, Expo, Python, Flask, scikit-learn, Railway.
+**Tecnologias principais:** Node.js, Express, Prisma, PostgreSQL, React, React Native, Expo, Python, Flask, scikit-learn, BullMQ, Redis, Railway.
 
 ---
 
@@ -76,7 +76,9 @@ Uma plataforma multiplataforma (web + mobile) que permite:
 - Página de estatísticas com análises agregadas do usuário
 - Gerenciamento de conta (edição de perfil, troca de senha, exclusão de conta)
 - API REST documentada (Swagger/OpenAPI)
-- Deploy completo em nuvem (Railway)
+- Deploy completo em nuvem (Railway): API, mining-service, PostgreSQL e Redis
+- Mensageria assíncrona com fila de jobs (BullMQ + Redis) para classificação em background
+- Painel visual de monitoramento da fila (Bull Board em `/admin/queues`)
 
 **O sistema NÃO FAZ:**
 - Diagnóstico psicológico profissional
@@ -129,7 +131,7 @@ Uma plataforma multiplataforma (web + mobile) que permite:
 
 ### 4.1 Arquitetura Geral
 
-O EntreMentes segue uma **arquitetura de microsserviços com 4 componentes**:
+O EntreMentes segue uma **arquitetura de microsserviços com 5 componentes**:
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -144,22 +146,29 @@ O EntreMentes segue uma **arquitetura de microsserviços com 4 componentes**:
 │                                                                  │
 │  ┌────────────────────────┐   ┌─────────────────────────────┐   │
 │  │  API REST              │   │  Serviço de Mineração       │   │
-│  │  Node.js + Express 4   │──▶│  Python 3.11 + Flask 3      │   │
+│  │  Node.js + Express 4   │   │  Python 3.11 + Flask 3      │   │
 │  │  Prisma 5 + Prisma ORM │   │  scikit-learn + joblib      │   │
-│  │  JWT + bcryptjs        │◀──│  POST /classify             │   │
-│  └────────────┬───────────┘   └─────────────────────────────┘   │
-│               │                                                  │
-│  ┌────────────▼────────────┐                                     │
-│  │  PostgreSQL 16          │                                     │
-│  │  (Railway Managed DB)   │                                     │
-│  └─────────────────────────┘                                     │
+│  │  JWT + bcryptjs        │   │  POST /classify             │   │
+│  │  BullMQ (producer)     │   └──────────────▲─────────────┘   │
+│  │  Bull Board /admin     │                  │ HTTP             │
+│  └────────┬──────┬────────┘   ┌─────────────┴─────────────┐   │
+│           │      │             │  BullMQ Worker             │   │
+│           │      │             │  (Node.js, 2º plano)       │   │
+│           │      └────────────▶│  consome jobs da fila      │   │
+│           │                   └───────────────────────────────┘   │
+│  ┌────────▼────────────────┐   ┌─────────────────────────────┐   │
+│  │  PostgreSQL 16          │   │  Redis (gerenciado)         │   │
+│  │  (Railway Managed DB)   │   │  broker da fila BullMQ      │   │
+│  └─────────────────────────┘   └─────────────────────────────┘   │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
 **Comunicação entre serviços:**
-- Clientes (web/mobile) → API REST: HTTP/HTTPS com Bearer Token JWT
-- API REST → Mining Service: HTTP interno síncrono via `classifyService.js` (fire-and-forget após salvar registro)
+- Clientes (web/mobile) → API REST: HTTPS com Bearer Token JWT
+- API REST → Redis (BullMQ): publica job após salvar registro — não bloqueia a resposta ao usuário
+- BullMQ Worker → Mining Service: consome job da fila e chama `POST /classify` em background
 - API REST → PostgreSQL: Prisma ORM (conexão direta via `DATABASE_URL`)
+- Bull Board (`/admin/queues`): painel visual para monitoramento em tempo real dos jobs (ativo, em espera, completo, erro)
 
 ### 4.2 Schema do Banco de Dados
 
@@ -191,7 +200,7 @@ id | clusterId (0–3) | nomePerfil | nivelRisco | descricao | cor
 
 O modelo conceitual e lógico estão documentados em `Documentação/BD - Conceitual.jpeg` e `Documentação/BD - Logico.jpeg`.
 
-### 4.3 Fluxo Principal: Registro → Classificação → Perfil
+### 4.3 Fluxo Principal: Registro → Fila → Classificação → Perfil
 
 ```
 Usuário preenche Registro Diário
@@ -200,18 +209,37 @@ POST /mood (API REST)
          ↓
 Salva RegistroBemEstar no PostgreSQL
          ↓
-Responde 200 para o usuário (sem bloqueio)
-         ↓  (fire-and-forget assíncrono)
-classifyService.js → POST /classify (Mining Service)
+API publica job na fila BullMQ (Redis)
+{ userId, nivelHumor, nivelEstresse, duracaoSono,
+  tempoTela, atividadeFisica, ansiedadeAntesProva }
          ↓
-Python Flask carrega modelo_kmeans.pkl
-Normaliza features → K-Means.predict()
-Retorna clusterId + nomePerfil + insights
+Responde 200 para o usuário ← usuário já pode continuar usando o app
          ↓
-Upsert em PerfilComportamental
+   ┌───────────────────────────────────────┐
+   │   FILA Redis (BullMQ)                 │
+   │   job guardado com retry automático   │
+   └───────────────────────┬───────────────┘
+                           ↓  (BullMQ Worker — segundo plano)
+POST /classify (Mining Service Python/Flask)
          ↓
-GET /analytics/profile (usuário visualiza perfil)
+Mapeamento inverso → normalização → KMeans.predict()
+Retorna clusterId + nomePerfil + nivelRisco + insights
+         ↓
+Upsert em PerfilComportamental (banco)
+         ↓
+Job marcado como COMPLETO na fila (visível no Bull Board)
+         ↓
+GET /analytics/profile → usuário visualiza perfil atualizado
 ```
+
+**Garantias da fila:**
+
+| Situação | Comportamento |
+|---|---|
+| Mining-service fora do ar | Job permanece na fila e é reprocessado quando voltar |
+| Erro durante processamento | Job volta à fila automaticamente (até 3 tentativas, intervalo 5s) |
+| Muitos registros simultâneos | Fila distribui o processamento sem sobrecarregar o mining-service |
+| Redis indisponível | Fallback automático para chamada HTTP direta (`classifyService.js`) |
 
 ---
 
@@ -347,12 +375,14 @@ O EntreMentes está implantado integralmente na plataforma **Railway** (https://
 
 **Serviços em produção:**
 
-| Serviço | Tecnologia | URL de Produção |
-|---------|-----------|----------------|
+| Serviço | Tecnologia | URL / Acesso |
+|---------|-----------|--------------|
 | API REST (backend) | Node.js + Express | `https://entrementes-production.up.railway.app` |
 | Banco de Dados | PostgreSQL 16 (gerenciado) | Railway internal connection |
-| Serviço de Mineração | Python + Flask | `https://zestful-adventure-production-4e44.up.railway.app` |
+| Serviço de Mineração | Python 3.11 + Flask 3 | `https://zestful-adventure-production-4e44.up.railway.app` |
+| Redis (broker BullMQ) | Redis gerenciado | Railway internal connection |
 | Swagger UI | Acoplado ao backend | `https://entrementes-production.up.railway.app/docs` |
+| Bull Board (painel fila) | Acoplado ao backend | `https://entrementes-production.up.railway.app/admin/queues` |
 
 ### 6.2 Configuração do Deploy
 
@@ -420,11 +450,12 @@ port = int(os.getenv("PORT", os.getenv("FLASK_PORT", 5000)))
 
 **Serviço Backend:**
 ```
-DATABASE_URL = ${{Postgres.DATABASE_URL}}   ← Variable Reference ao banco gerenciado
-PORT         = 3000
-NODE_ENV     = production
-JWT_SECRET   = [string secreta]
-JWT_EXPIRES_IN = 7d
+DATABASE_URL       = ${{Postgres.DATABASE_URL}}   ← Variable Reference ao banco gerenciado
+REDIS_URL          = ${{Redis.REDIS_URL}}          ← Variable Reference ao Redis gerenciado
+PORT               = 3000
+NODE_ENV           = production
+JWT_SECRET         = [string secreta]
+JWT_EXPIRES_IN     = 7d
 MINING_SERVICE_URL = https://zestful-adventure-production-4e44.up.railway.app
 ```
 
@@ -433,14 +464,70 @@ MINING_SERVICE_URL = https://zestful-adventure-production-4e44.up.railway.app
 PORT = [injetado automaticamente pelo Railway]
 ```
 
-### 6.6 Arquitetura de Mensageria — Pub/Sub (Planejado)
+### 6.6 Arquitetura de Mensageria — BullMQ + Redis (Implementado)
 
-A arquitetura original do EntreMentes prevê o uso do **Google Cloud Pub/Sub** para comunicação assíncrona entre o backend e o mining-service, substituindo a chamada HTTP direta atual. Os tópicos planejados são:
+A comunicação assíncrona entre o backend e o mining-service é realizada por uma **fila de mensagens BullMQ** com broker **Redis**, ambos em produção no Railway. Esta arquitetura substitui a chamada HTTP direta (fire-and-forget) e garante processamento confiável mesmo sob falhas.
 
-- `mood-registered`: publicado pelo backend após cada registro de humor
-- `profile-classified`: publicado pelo mining-service após classificação
+#### Ciclo completo de uma mensagem
 
-Esta funcionalidade está **planejada e documentada**, com a integração direta via HTTP funcionando como solução interim em produção. A implementação completa com Pub/Sub será realizada assim que o acesso ao Google Cloud Console for disponibilizado.
+```
+1. Usuário salva registro → POST /mood
+            ↓
+2. Backend salva no PostgreSQL
+            ↓
+3. Backend publica job na fila Redis (BullMQ):
+   { userId, nivelHumor, nivelEstresse, duracaoSono,
+     tempoTela, atividadeFisica, ansiedadeAntesProva }
+            ↓
+4. Backend responde 200 ← usuário já pode continuar usando o app
+            ↓
+   ┌─────────────────────────────────┐
+   │   FILA Redis (BullMQ)           │  job armazenado na memória Redis
+   └──────────────┬──────────────────┘
+                  ↓  BullMQ Worker (Node.js, segundo plano)
+5. Worker consome job → POST /classify (mining-service)
+            ↓
+6. Mining-service: K-Means.predict() → retorna perfil
+            ↓
+7. Worker salva/atualiza PerfilComportamental no banco
+            ↓
+8. Job marcado como COMPLETO na fila
+            ↓
+9. Usuário abre "Seu Perfil" → dados já atualizados
+```
+
+#### Garantias da fila
+
+| Situação | Comportamento |
+|---|---|
+| Mining-service fora do ar | Job permanece na fila e é reprocessado quando voltar |
+| Erro durante o processamento | Retry automático (3 tentativas, intervalo fixo de 5 segundos) |
+| Muitos registros simultâneos | Fila distribui o processamento sem sobrecarregar o mining-service |
+| Redis indisponível | Fallback automático para chamada HTTP direta (`classifyService.js`) |
+
+#### Painel visual — Bull Board
+
+Disponível em `https://entrementes-production.up.railway.app/admin/queues`, o **Bull Board** permite monitorar em tempo real:
+
+- **Ativo** — job sendo processado pelo worker agora
+- **Em Espera** — jobs aguardando na fila Redis
+- **Completo** — jobs processados com sucesso (exibe o JSON completo dos dados)
+- **Erro** — jobs que falharam com detalhes do erro e stack trace
+
+#### Implementação técnica
+
+```
+backend/
+├── src/
+│   ├── queues/
+│   │   ├── classifyQueue.js   ← cria a Queue BullMQ (producer)
+│   │   └── classifyWorker.js  ← instancia o Worker (consumer)
+│   └── services/
+│       └── classifyService.js ← fallback HTTP direto se Redis indisponível
+└── server.js                  ← inicializa worker junto com o servidor
+```
+
+O worker (`classifyWorker.js`) é iniciado automaticamente com o servidor e roda em segundo plano, consumindo jobs da fila `classificacao` e chamando o mining-service via HTTP.
 
 ---
 
@@ -629,7 +716,7 @@ Entregas realizadas:
 - K-Means treinado: `kmeans_clustering.py` gera `modelo_kmeans.pkl` (K=4, silhouette 0.123)
 - **Apresentação presencial realizada em 12/05/2026 — aprovada sem objeções pelos professores**
 
-### Sprint 3 — 01/06/2026 🚧
+### Sprint 3 — 01/06/2026 ✅
 
 **Objetivo:** Produto final integrado.
 
@@ -641,14 +728,17 @@ Entregas realizadas:
 - Tela "Humor" no mobile com perfil comportamental completo
 - Páginas "Meu Perfil" e "Estatísticas" adicionadas (web e mobile)
 - Swagger UI disponível em produção
-- Deploy completo no Railway (backend + PostgreSQL + mining-service)
+- Deploy completo no Railway (backend + PostgreSQL + mining-service + **Redis**)
+- **Mensageria BullMQ + Redis** implementada e deployada em produção:
+  - `classifyQueue.js` (producer), `classifyWorker.js` (consumer) integrados ao backend
+  - Bull Board disponível em `/admin/queues` para monitoramento em tempo real
+  - Fallback automático para HTTP direto se Redis indisponível
+- Dark mode com toggle sol/lua na sidebar, transições suaves em todos os cards
+- Fecha todos os modais com tecla Escape
 - **Atividade "Extração de Padrões"** entregue no Teams em 19/05/2026 (prazo 21/05)
   - `extracao_padroes.ipynb` com K-Means + Decision Tree executados com outputs
   - `relatorio_extracao_padroes.md` com justificativa dos algoritmos
-
-**Pendente:**
-- [ ] Vídeo demonstração (YouTube)
-- [ ] Implementação GCP Pub/Sub (aguardando acesso ao GCP Console)
+- **Vídeo de demonstração** gravado e publicado: https://youtu.be/p0qlAkJlquc
 
 ---
 
@@ -661,9 +751,11 @@ O EntreMentes foi entregue como um produto **completo e funcional**, atendendo a
 - ✅ Plataforma multiplataforma: **web (React) + mobile (React Native/Expo)** funcionando em produção
 - ✅ API REST **documentada com Swagger/OpenAPI** e disponível em produção
 - ✅ Banco de dados **PostgreSQL em produção** (Railway gerenciado)
-- ✅ Deploy em nuvem com **alta disponibilidade** e **HTTPS** (Railway)
+- ✅ Deploy em nuvem com **alta disponibilidade** e **HTTPS** (Railway) — 5 serviços independentes
+- ✅ **Mensageria assíncrona com BullMQ + Redis** em produção, com painel Bull Board
 - ✅ Mineração de dados: **K-Means K=4** aplicado com resultados documentados e integrados ao sistema
 - ✅ Extração de padrões: **Decision Tree** para regras IF-THEN interpretáveis
+- ✅ Vídeo de demonstração publicado: https://youtu.be/p0qlAkJlquc
 - ✅ Commits ativos de ambos os integrantes em todos os módulos do projeto
 
 ### 9.2 Resultados da Mineração
@@ -683,16 +775,16 @@ O EntreMentes foi entregue como um produto **completo e funcional**, atendendo a
 - **Integração multiplataforma:** a necessidade de manter consistência entre web (React) e mobile (React Native) exigiu abstrações cuidadosas — especialmente no `api.js` e no `AuthContext`, replicados em ambas as plataformas com adaptações específicas (localStorage vs AsyncStorage, `import.meta.env` vs `__DEV__`).
 - **Deploy em nuvem:** a migração do ambiente local para Railway expôs incompatibilidades (bcrypt compilado em Windows vs Linux) e a necessidade de gerenciar migrations automaticamente em produção.
 - **Mineração de dados em produção:** serializar e servir um modelo scikit-learn via Flask exigiu atenção ao versionamento da biblioteca (`scikit-learn 1.6.1` fixado) e ao mapeamento inverso entre os campos do app e as features do modelo.
-- **Comunicação assíncrona:** o padrão fire-and-forget para a classificação garantiu que nenhuma falha do mining-service impactasse a experiência do usuário no registro diário.
+- **Mensageria com BullMQ + Redis:** a migração do fire-and-forget HTTP para uma fila de mensagens real trouxu garantias de entrega (retry automático, persistência no Redis) sem impactar a experiência do usuário. O fallback para HTTP direto garantiu resiliência durante a transição.
 
 ### 9.4 Considerações Finais
 
 O EntreMentes demonstra que é possível, com uma equipe de 2 pessoas e orçamento zero, construir uma plataforma multiplataforma funcional, com backend em nuvem, mineração de dados integrada e documentação técnica completa — em 3 meses de desenvolvimento ágil em 3 sprints.
 
 O projeto integra efetivamente as três disciplinas do 6º semestre:
-- **Laboratório de Desenvolvimento Multiplataforma:** web + mobile + backend + sistemas distribuídos + mensageria (Pub/Sub planejado)
-- **Computação em Nuvem II:** deploy Railway com alta disponibilidade, HTTPS, banco gerenciado, variáveis de ambiente e restart automático
-- **Mineração de Dados:** pipeline completo de EDA → pré-processamento → K-Means → extração de padrões → integração em produção
+- **Laboratório de Desenvolvimento Multiplataforma:** web + mobile + backend + API REST + sistemas distribuídos + mensageria assíncrona (BullMQ + Redis)
+- **Computação em Nuvem II:** deploy Railway com 5 serviços independentes, alta disponibilidade, HTTPS, banco gerenciado, Redis gerenciado, variáveis de ambiente e restart automático
+- **Mineração de Dados:** pipeline completo de EDA → pré-processamento → K-Means → extração de padrões → integração em produção via mining-service Flask
 
 ---
 

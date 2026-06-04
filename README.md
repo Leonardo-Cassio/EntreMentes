@@ -260,6 +260,14 @@ Desenvolvido por 2 integrantes — março a junho de 2026.
 
 ---
 
+## Vídeo de Demonstração
+
+[![EntreMentes — PI 6º Semestre DSM FATEC Franca 2026](https://img.youtube.com/vi/p0qlAkJlquc/maxresdefault.jpg)](https://youtu.be/p0qlAkJlquc)
+
+▶️ [https://youtu.be/p0qlAkJlquc](https://youtu.be/p0qlAkJlquc)
+
+---
+
 ## Figma
 
 [Acessar protótipo](https://www.figma.com/design/t3bPkPFGW4uXckBCziasEx/EntreMentes?node-id=0-1&p=f&t=cpJM06Qzt1sGj8P5-0)
