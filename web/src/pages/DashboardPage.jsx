@@ -209,6 +209,14 @@ export default function DashboardPage() {
   const [loadingRegistros, setLoadingRegistros] = useState(true);
   const [perfil, setPerfil]                     = useState(null);
   const [loadingPerfil, setLoadingPerfil]       = useState(true);
+  const [darkMode, setDarkMode]                 = useState(
+    () => localStorage.getItem('theme') === 'dark',
+  );
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+    localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
 
   // ── Efeito de digitação na saudação ──────────────────────────────────────
   const [saudacaoTexto, setSaudacaoTexto]         = useState('');
@@ -293,6 +301,15 @@ export default function DashboardPage() {
             </h1>
             <p className="dashboard-subtitulo">Como você está se sentindo hoje?</p>
           </div>
+
+          <button className="tema-toggle" onClick={() => setDarkMode(d => !d)} aria-label="Alternar tema">
+            <span className={`tema-label ${darkMode ? 'tema-visivel' : 'tema-oculto'}`}>Dark</span>
+            <span className={`tema-label ${!darkMode ? 'tema-visivel' : 'tema-oculto'}`}>Light</span>
+            <span className="tema-emoji-wrap">
+              <span className={`tema-emoji ${darkMode ? 'tema-visivel' : 'tema-oculto'}`}>🌙</span>
+              <span className={`tema-emoji ${!darkMode ? 'tema-visivel' : 'tema-oculto'}`}>☀️</span>
+            </span>
+          </button>
         </section>
 
         {/* Seletor de humor rápido */}

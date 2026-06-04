@@ -1,7 +1,7 @@
 .historico-main {
   flex: 1;
   overflow-y: auto;
-  background: #F8F9FA;
+  background: var(--surface);
   padding: 32px;
 }
 
@@ -22,13 +22,13 @@
 .historico-titulo {
   font-size: 26px;
   font-weight: 700;
-  color: #2D3436;
+  color: var(--text);
   margin: 0;
 }
 
 .historico-subtitulo {
   font-size: 14px;
-  color: #636E72;
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -41,12 +41,12 @@
 
 /* Card */
 .historico-card {
-  background: #fff;
-  border: 1px solid #DFE6E9;
+  background: var(--white);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 18px 20px;
   cursor: pointer;
-  transition: box-shadow 0.15s;
+  transition: box-shadow 0.15s, background 0.35s, border-color 0.35s;
   user-select: none;
 }
 
@@ -75,12 +75,12 @@
 .historico-humor {
   font-size: 15px;
   font-weight: 700;
-  color: #2D3436;
+  color: var(--text);
 }
 
 .historico-data {
   font-size: 12px;
-  color: #B2BEC3;
+  color: var(--text-light);
 }
 
 .historico-badge {
@@ -93,7 +93,7 @@
 
 .historico-chevron {
   font-size: 10px;
-  color: #B2BEC3;
+  color: var(--text-light);
   flex-shrink: 0;
 }
 
@@ -101,7 +101,7 @@
 .historico-detalhes {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #DFE6E9;
+  border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -114,27 +114,29 @@
 }
 
 .historico-item {
-  background: #F8F9FA;
+  background: var(--surface);
   border-radius: 8px;
   padding: 6px 12px;
   font-size: 13px;
-  color: #636E72;
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   gap: 5px;
+  transition: background 0.35s;
 }
 
 .historico-item b {
-  color: #2D3436;
+  color: var(--text);
 }
 
 .historico-nota {
-  background: #F8F9FA;
+  background: var(--surface);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 13px;
-  color: #636E72;
+  color: var(--text-secondary);
   line-height: 1.5;
+  transition: background 0.35s;
 }
 
 /* Estados (loading, erro, vazio) */
@@ -145,7 +147,7 @@
   justify-content: center;
   padding: 80px 20px;
   gap: 12px;
-  color: #636E72;
+  color: var(--text-secondary);
   font-size: 14px;
   text-align: center;
 }
@@ -157,20 +159,20 @@
 .historico-vazio-titulo {
   font-size: 16px;
   font-weight: 700;
-  color: #2D3436;
+  color: var(--text);
   margin: 0;
 }
 
 .historico-vazio-sub {
   font-size: 14px;
-  color: #B2BEC3;
+  color: var(--text-light);
   margin: 0;
 }
 
 .historico-spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid #DFE6E9;
+  border: 3px solid var(--border);
   border-top-color: #6C5CE7;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;

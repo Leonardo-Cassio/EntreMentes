@@ -95,7 +95,7 @@
 .dashboard-layout {
   display: flex;
   height: 100vh;
-  background: #F1F3F5;
+  background: var(--surface);
   overflow: hidden;
 }
 
@@ -141,6 +141,60 @@
   0%, 100% { opacity: 1; }
   50%       { opacity: 0; }
 }
+
+/* ── Botão de tema (light/dark) ──────────────────────────────────────────── */
+.tema-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 99px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: border-color 0.25s, background 0.35s, color 0.25s, box-shadow 0.25s;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.tema-toggle:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 2px 12px rgba(108, 92, 231, 0.15);
+}
+
+/* Wrapper do texto — ocupa espaço fixo para não mudar o tamanho do botão */
+.tema-toggle .tema-label {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  text-align: right;
+  transition: opacity 0.4s ease;
+}
+
+/* Wrapper dos emojis sobrepostos */
+.tema-emoji-wrap {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tema-emoji {
+  position: absolute;
+  font-size: 17px;
+  line-height: 1;
+  transition: opacity 0.4s ease;
+}
+
+.tema-visivel { opacity: 1; }
+.tema-oculto  { opacity: 0; pointer-events: none; }
 
 .dashboard-subtitulo {
   font-size: 15px;
@@ -792,22 +846,24 @@
 }
 
 .chart-tooltip {
-  background: var(--text);
+  background: #ffffff;
+  border: 1px solid #DFE6E9;
   border-radius: 8px;
   padding: 6px 12px;
   text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .chart-tooltip-label {
   font-size: 11px;
-  color: var(--text-light);
+  color: #636E72;
   margin-bottom: 2px;
 }
 
 .chart-tooltip-value {
   font-size: 15px;
   font-weight: 700;
-  color: #fff;
+  color: #2D3436;
 }
 
 /* ── Última avaliação ────────────────────────────────────────────────────── */
