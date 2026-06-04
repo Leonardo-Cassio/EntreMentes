@@ -93,6 +93,46 @@ function getHumorLabel(valor) {
 
 const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
+// ── Frases diárias ─────────────────────────────────────────────────────────────
+const FRASES_DIARIAS = [
+  { frase: 'Tudo o que um sonho precisa para ser realizado é alguém que acredite que ele possa ser realizado.', autor: 'Roberto Shinyashiki' },
+  { frase: 'O sucesso é a soma de pequenos esforços repetidos dia após dia.', autor: 'Robert Collier' },
+  { frase: 'Você não precisa ser ótimo para começar, mas precisa começar para ser ótimo.', autor: 'Zig Ziglar' },
+  { frase: 'A mente é tudo. Você se torna aquilo que você pensa.', autor: 'Buda' },
+  { frase: 'Não existe vento favorável para quem não sabe para onde vai.', autor: 'Sêneca' },
+  { frase: 'A jornada de mil milhas começa com um único passo.', autor: 'Lao Tsé' },
+  { frase: 'Conhecer a si mesmo é o começo de toda sabedoria.', autor: 'Aristóteles' },
+  { frase: 'Respire. É apenas um mau dia, não uma má vida.', autor: 'Anônimo' },
+  { frase: 'Você é mais corajoso do que acredita, mais forte do que parece e mais inteligente do que pensa.', autor: 'A.A. Milne' },
+  { frase: 'Seja gentil com você mesmo. Você está fazendo o melhor que pode.', autor: 'Anônimo' },
+  { frase: 'O fracasso é apenas a oportunidade de recomeçar com mais inteligência.', autor: 'Henry Ford' },
+  { frase: 'A educação é a arma mais poderosa que você pode usar para mudar o mundo.', autor: 'Nelson Mandela' },
+  { frase: 'A perseverança é o caminho do êxito.', autor: 'Charles Chaplin' },
+  { frase: 'Progresso, não perfeição.', autor: 'Anônimo' },
+  { frase: 'Nunca é tarde para ser o que você poderia ter sido.', autor: 'George Eliot' },
+  { frase: 'A coragem não é a ausência do medo, mas a decisão de que algo é mais importante que o medo.', autor: 'Ambrose Redmoon' },
+  { frase: 'O segredo do sucesso é a constância do propósito.', autor: 'Benjamin Disraeli' },
+  { frase: 'Quanto mais você aprende, mais percebe o quanto ainda há para aprender.', autor: 'Aristóteles' },
+  { frase: 'Cuide de si mesmo tanto quanto cuida dos seus estudos.', autor: 'Anônimo' },
+  { frase: 'Cada dia traz uma nova chance de recomeçar.', autor: 'Anônimo' },
+  { frase: 'Só há um caminho para a felicidade: parar de se preocupar com as coisas fora de nosso controle.', autor: 'Epicteto' },
+  { frase: 'O bem-estar não é um destino, é uma prática diária.', autor: 'Anônimo' },
+  { frase: 'Grandes realizações geralmente requerem grandes sacrifícios e não são alcançadas sem esforço.', autor: 'Mahatma Gandhi' },
+  { frase: 'Não espere por uma crise para descobrir o que é importante em sua vida.', autor: 'Platão' },
+  { frase: 'Seu único limite é você mesmo.', autor: 'Anônimo' },
+  { frase: 'Sorrir é a menor distância entre duas pessoas.', autor: 'Victor Borge' },
+  { frase: 'A vida é 10% o que acontece com você e 90% como você reage.', autor: 'Charles R. Swindoll' },
+  { frase: 'Comece onde você está. Use o que você tem. Faça o que você pode.', autor: 'Arthur Ashe' },
+  { frase: 'O mais importante é aproveitar sua vida — ser feliz é tudo que importa.', autor: 'Audrey Hepburn' },
+  { frase: 'Pequenos progressos diários levam a grandes resultados.', autor: 'Satya Nadelha' },
+];
+
+function getFraseDoDia() {
+  const inicio   = new Date(new Date().getFullYear(), 0, 0);
+  const diaDaAno = Math.floor((new Date() - inicio) / 86400000);
+  return FRASES_DIARIAS[diaDaAno % FRASES_DIARIAS.length];
+}
+
 function transformarDadosLinha(registros) {
   return [...registros]
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
@@ -214,6 +254,9 @@ export default function DashboardPage() {
   const [saudacaoTexto, setSaudacaoTexto]         = useState('');
   const [saudacaoCompleta, setSaudacaoCompleta]   = useState(false);
 
+  // ── Efeito de digitação na frase do dia (bem devagar) ────────────────────
+  const [fraseTexto, setFraseTexto] = useState('');
+
   useEffect(() => {
     if (!user?.name) return;
     const nome     = user.name.split(' ')[0];
@@ -232,6 +275,22 @@ export default function DashboardPage() {
     }, 55);
     return () => clearInterval(t);
   }, [user?.name]);
+
+  useEffect(() => {
+    const frase = getFraseDoDia().frase;
+    let i = 0;
+    setFraseTexto('');
+    let intervalId;
+    // pequeno delay antes de começar a digitar
+    const timeoutId = setTimeout(() => {
+      intervalId = setInterval(() => {
+        i++;
+        setFraseTexto(frase.slice(0, i));
+        if (i >= frase.length) clearInterval(intervalId);
+      }, 35); // 35 ms por caractere
+    }, 800);
+    return () => { clearTimeout(timeoutId); clearInterval(intervalId); };
+  }, []);
 
   useEffect(() => {
     if (!token) { setLoadingRegistros(false); setLoadingPerfil(false); return; }
@@ -261,7 +320,8 @@ export default function DashboardPage() {
     { label: 'Seu Perfil',       valor: loadingPerfil ? '…' : (perfil?.nomePerfil ?? '—'), icone: <IconePerfilMetrica />, cor: 'roxo',    tipo: 'perfil'    },
   ];
 
-  const humorAtual = EMOJIS.find(e => e.nivel === humorSelecionado);
+  const humorAtual  = EMOJIS.find(e => e.nivel === humorSelecionado);
+  const fraseDoDia  = getFraseDoDia();
 
   const handleSelecionarHumor = (nivel) => {
     setHumorSelecionado(nivel);
@@ -292,6 +352,18 @@ export default function DashboardPage() {
               {!saudacaoCompleta && <span className="saudacao-cursor" />}
             </h1>
             <p className="dashboard-subtitulo">Como você está se sentindo hoje?</p>
+          </div>
+
+          {/* Frase do Dia */}
+          <div className="frase-do-dia">
+            <span className="frase-aspas">&ldquo;</span>
+            <div className="frase-texto-wrapper">
+              {/* texto fantasma: reserva o espaço final, invisível */}
+              <p className="frase-texto frase-texto-ghost" aria-hidden="true">{fraseDoDia.frase}</p>
+              {/* texto animado sobreposto */}
+              <p className="frase-texto frase-texto-animado">{fraseTexto}</p>
+            </div>
+            <span className="frase-autor">{fraseDoDia.autor}</span>
           </div>
         </section>
 

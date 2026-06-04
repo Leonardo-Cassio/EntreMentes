@@ -7,8 +7,8 @@
   /* Gradiente roxo fechado — use em todos os botões e elementos de destaque */
   --primary-gradient: linear-gradient(135deg, #4A3ABB 0%, #6C5CE7 55%, #8B7CF6 100%);
   --primary-gradient-h: linear-gradient(90deg, #4A3ABB 0%, #6C5CE7 55%, #8B7CF6 100%);
-  --bg: #FFFFFF;
-  --surface: #F8F9FA;
+  --bg: #FEFDF8;
+  --surface: #FAF9F3;
   --text: #2D3436;
   --text-secondary: #636E72;
   --text-light: #B2BEC3;
@@ -26,7 +26,9 @@
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--text);
-  background: var(--bg);
+  background: linear-gradient(160deg, #FFFFFF 0%, #FEFCEE 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
