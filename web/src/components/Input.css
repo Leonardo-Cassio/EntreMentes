@@ -4,8 +4,8 @@
   align-items: center;
   border: 1px solid var(--border);
   border-radius: 10px;
-  background: var(--white);
-  transition: border-color 0.2s;
+  background: var(--input-bg);
+  transition: border-color 0.2s, background 0.35s;
   padding: 0 14px;
   height: 48px;
 }
@@ -48,4 +48,14 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
+}
+
+/* Fix autofill do browser em dark mode */
+.input-wrapper input:-webkit-autofill,
+.input-wrapper input:-webkit-autofill:hover,
+.input-wrapper input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
+  -webkit-text-fill-color: var(--text) !important;
+  caret-color: var(--text);
+  transition: background-color 5000s ease-in-out 0s;
 }

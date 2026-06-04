@@ -1,14 +1,27 @@
 const moodService     = require('../services/moodService');
 const classifyService = require('../services/classifyService');
+const { classifyQueue } = require('../queues/classifyQueue');
 
 exports.create = async (req, res) => {
   try {
     const entry = await moodService.create(req.userId, req.body);
     res.status(201).json({ success: true, data: entry, message: "Registro de humor criado com sucesso" });
 
-    // Classificação assíncrona — não bloqueia a resposta ao usuário.
-    // Substitui o Pub/Sub enquanto o acesso ao GCP não é liberado.
-    classifyService.classificarEAtualizar(req.userId, req.body);
+    // Se Redis disponível: enfileira o job (BullMQ)
+    // Fallback: chama o classifyService diretamente (sem Redis)
+    if (classifyQueue) {
+      classifyQueue.add('classificar', {
+        userId:              req.userId,
+        nivelHumor:          req.body.nivelHumor,
+        nivelEstresse:       req.body.nivelEstresse,
+        ansiedadeAntesProva: req.body.ansiedadeAntesProva,
+        duracaoSono:         req.body.duracaoSono,
+        tempoTela:           req.body.tempoTela,
+        atividadeFisica:     req.body.atividadeFisica,
+      }).catch(() => {});
+    } else {
+      classifyService.classificarEAtualizar(req.userId, req.body);
+    }
   } catch (err) {
     res.status(400).json({ success: false, data: null, message: err.message });
   }

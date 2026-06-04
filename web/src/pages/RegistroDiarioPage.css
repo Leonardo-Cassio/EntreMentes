@@ -121,7 +121,7 @@
 
 .emoji-opcao.ativo {
   border-color: var(--primary);
-  background: #F3F1FF;
+  background: rgba(108, 92, 231, 0.08);
 }
 
 .emoji-opcao-icon {
@@ -313,7 +313,7 @@
 
 .opcao-btn.ativo {
   border-color: var(--primary);
-  background: #F3F1FF;
+  background: rgba(108, 92, 231, 0.08);
   color: var(--primary);
   font-weight: 600;
 }

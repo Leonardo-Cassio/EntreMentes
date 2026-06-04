@@ -249,6 +249,14 @@ export default function DashboardPage() {
   const [loadingRegistros, setLoadingRegistros] = useState(true);
   const [perfil, setPerfil]                     = useState(null);
   const [loadingPerfil, setLoadingPerfil]       = useState(true);
+  const [darkMode,]                 = useState(
+    () => localStorage.getItem('theme') === 'dark',
+  );
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+    localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
 
   // ── Efeito de digitação na saudação ──────────────────────────────────────
   const [saudacaoTexto, setSaudacaoTexto]         = useState('');

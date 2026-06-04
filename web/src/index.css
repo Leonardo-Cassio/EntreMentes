@@ -4,7 +4,6 @@
   --primary: #6C5CE7;
   --primary-dark: #5A4BD1;
   --primary-light: #A29BFE;
-  /* Gradiente roxo fechado — use em todos os botões e elementos de destaque */
   --primary-gradient: linear-gradient(135deg, #4A3ABB 0%, #6C5CE7 55%, #8B7CF6 100%);
   --primary-gradient-h: linear-gradient(90deg, #4A3ABB 0%, #6C5CE7 55%, #8B7CF6 100%);
   --bg: #FEFDF8;
@@ -15,6 +14,23 @@
   --border: #DFE6E9;
   --error: #E74C3C;
   --white: #FFFFFF;
+  /* Sempre branco — para texto sobre fundos coloridos (botões, gradientes) */
+  --text-on-color: #FFFFFF;
+  /* Cor de fundo do input — separada de --white para controle preciso */
+  --input-bg: #FFFFFF;
+}
+
+[data-theme="dark"] {
+  --bg: #13131A;
+  --surface: #1C1C27;
+  --white: #22222F;
+  --text: #EEEEF5;
+  --text-secondary: #9090A8;
+  --text-light: #55556A;
+  --border: #2E2E42;
+  --error: #FF6B6B;
+  --input-bg: #2A2A3D;
+  /* --text-on-color mantém #FFFFFF mesmo no dark */
 }
 
 * {
@@ -31,6 +47,7 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background 0.35s ease, color 0.35s ease;
 }
 
 #root {

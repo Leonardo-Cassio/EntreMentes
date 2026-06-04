@@ -10,13 +10,13 @@ import './EstatisticasPage.css';
 
 const HUMOR_LABELS = { 1: 'Muito mal', 2: 'Mal', 3: 'Neutro', 4: 'Bem', 5: 'Muito bem' };
 
-// Escala de opacidade do roxo primário — do mais claro (ruim) ao mais intenso (ótimo)
+// Progressão de claro (ruim) a escuro (ótimo) — cores sólidas para não vazar a grid
 const HUMOR_CORES = [
-  'rgba(108, 92, 231, 0.2)',
-  'rgba(108, 92, 231, 0.4)',
-  'rgba(108, 92, 231, 0.6)',
-  'rgba(108, 92, 231, 0.8)',
-  'rgba(108, 92, 231, 1.0)',
+  '#DDD9FF',
+  '#B2ACFC',
+  '#8B7CF6',
+  '#6C5CE7',
+  '#4A3ABB',
 ];
 
 // Variações do roxo primário para estresse e desempenho
@@ -208,7 +208,7 @@ export default function EstatisticasPage() {
                   </div>
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={stats.distHumor} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                       <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#B2BEC3' }} tickLine={false} axisLine={false} />
                       <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#B2BEC3' }} tickLine={false} axisLine={false} />
                       <Tooltip content={<TooltipPersonalizado />} />
@@ -228,7 +228,7 @@ export default function EstatisticasPage() {
                   </div>
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={stats.distEstresse} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                       <XAxis dataKey="label" tick={{ fontSize: 13, fill: '#636E72' }} tickLine={false} axisLine={false} />
                       <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#B2BEC3' }} tickLine={false} axisLine={false} />
                       <Tooltip content={<TooltipPersonalizado />} />
@@ -251,7 +251,7 @@ export default function EstatisticasPage() {
                   </div>
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={stats.distDesempenho} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                       <XAxis dataKey="label" tick={{ fontSize: 13, fill: '#636E72' }} tickLine={false} axisLine={false} />
                       <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#B2BEC3' }} tickLine={false} axisLine={false} />
                       <Tooltip content={<TooltipPersonalizado />} />
@@ -271,7 +271,7 @@ export default function EstatisticasPage() {
                   </div>
                   <ResponsiveContainer width="100%" height={200}>
                     <LineChart data={stats.ultimos30} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                       <XAxis dataKey="dia" tick={{ fontSize: 11, fill: '#B2BEC3' }} tickLine={false} axisLine={false} interval={4} />
                       <YAxis tick={{ fontSize: 11, fill: '#B2BEC3' }} tickLine={false} axisLine={false} />
                       <Tooltip content={<TooltipPersonalizado />} />
@@ -294,7 +294,7 @@ export default function EstatisticasPage() {
                 </div>
                 <ResponsiveContainer width="100%" height={200}>
                   <LineChart data={stats.ultimos30} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="dia" tick={{ fontSize: 11, fill: '#B2BEC3' }} tickLine={false} axisLine={false} interval={4} />
                     <YAxis tick={{ fontSize: 11, fill: '#B2BEC3' }} tickLine={false} axisLine={false} />
                     <Tooltip content={<TooltipPersonalizado />} />
