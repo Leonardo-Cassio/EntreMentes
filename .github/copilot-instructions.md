@@ -16,17 +16,16 @@ retomar exatamente de onde o anterior parou.
 
 ## Estado atual do desenvolvimento
 
-> **Última atualização:** 2026-06-02 (sessão redesign visual web + mobile Railway fix — Gabriel)
+> **Última atualização:** 2026-06-03 (sessão mensageria BullMQ + Redis + sync mobile — Leonardo)
 > **Sprint 2 apresentada com sucesso — sem objeções dos professores ✅**
 > **Sprint 3 em andamento — todo o Bloco C frontend concluído ✅**
-> **Integração mining-service ↔ backend sem Pub/Sub implementada ✅**
-> **Comentários data-analysis aprimorados para apresentação ✅**
-> **Deploy Railway concluído — backend + PostgreSQL + mining-service online em produção ✅**
-> **Páginas "Meu Perfil" e "Estatísticas" adicionadas ao web ✅**
+> **Mensageria implementada com BullMQ + Redis no Railway ✅ — Bull Board ativo em /admin/queues**
+> **Mobile sincronizado com web (Perfil, Estatísticas, modais, gráficos) ✅**
+> **Deploy Railway concluído — backend + PostgreSQL + mining-service + Redis online ✅**
+> **Páginas "Meu Perfil" e "Estatísticas" adicionadas ao web e mobile ✅**
 > **Relatório Final do PI criado e exportado como PDF ✅**
 > **Roteiro do vídeo de demonstração criado ✅**
 > **Redesign visual Dashboard e Estatísticas concluído ✅**
-> **Mobile apontando para Railway em todos os ambientes ✅**
 
 ---
 
@@ -106,11 +105,18 @@ retomar exatamente de onde o anterior parou.
 
 **Backend**
 - [x] Mining Service Python (Flask) — `POST /classify` + `GET /health` funcionando e testados
-- [ ] ~~Pub/Sub~~ — **EM QUARENTENA** (aguardando professor liberar GCP + instruções)
+- [x] **Mensageria BullMQ + Redis** ✅ implementada e funcionando em produção (sessão 03/06)
+  - `backend/src/queues/classifyQueue.js` — cria fila com graceful degradation sem Redis
+  - `backend/src/workers/classifyWorker.js` — worker que processa os jobs de classificação
+  - `moodController.js` — usa fila se Redis disponível, fallback para classifyService direto
+  - `server.js` — inicia worker + Bull Board em `/admin/queues`
+  - Redis adicionado no Railway; variável `REDIS_URL` configurada no serviço backend
+  - Bull Board acessível em `https://entrementes-production.up.railway.app/admin/queues`
+  - Job testado e confirmado: COMPLETO em 148ms com dados reais
 - [x] Endpoint `GET /analytics/profile` no backend
-- [x] Integração direta backend → mining-service via `classifyService.js` (substitui Pub/Sub enquanto GCP não é liberado)
+- [x] Integração direta backend → mining-service via `classifyService.js` (fallback quando Redis indisponível)
 - [x] `DefinicaoCluster` populada automaticamente na primeira classificação; script `seedClusters.js` para pré-popular
-- [x] `POST /mood` agora dispara classificação assíncrona (fire-and-forget) após salvar o registro
+- [x] `POST /mood` enfileira job no Redis (BullMQ) ou fallback fire-and-forget
 
 **Frontend — Bloco C**
 - [x] **C1** Dashboard mobile: nome e iniciais do avatar via `useAuth()` (removido hardcoded "João Silva")
@@ -163,6 +169,46 @@ retomar exatamente de onde o anterior parou.
 ---
 
 ## Histórico de sessões
+
+### Sessão 03/06/2026 — Mensageria BullMQ + Redis + sync mobile (Leonardo)
+```
+backend/package.json                        ← bullmq, ioredis, @bull-board/api, @bull-board/express instalados
+backend/src/queues/classifyQueue.js         ← NOVO: cria Queue + conexão IORedis; graceful degradation sem REDIS_URL
+backend/src/workers/classifyWorker.js       ← NOVO: Worker que processa jobs — chama mining-service, upsert perfil
+backend/src/controllers/moodController.js   ← usa classifyQueue.add() se Redis disponível; fallback classifyService
+backend/src/server.js                       ← inicia worker + Bull Board montado em /admin/queues
+
+web/.env                                    ← NOVO: VITE_API_URL=https://entrementes-production.up.railway.app
+                                              (corrige ERR_CONNECTION_REFUSED no web local sem backend rodando)
+
+mobile/src/context/AuthContext.js           ← updateUser() adicionado (atualiza state + AsyncStorage)
+mobile/src/services/api.js                  ← updateMe(), deleteMe() adicionados
+mobile/src/screens/PerfilScreen.js          ← NOVO: edição nome/e-mail, troca de senha, excluir conta com modal
+mobile/src/screens/EstatisticasScreen.js    ← NOVO: cards de resumo + gráficos de barras horizontais (View puro)
+mobile/src/navigation/AppTabs.js            ← "Humor" substituído por "Estatísticas"; PerfilScreen real importado
+
+mobile/src/screens/DashboardScreen.js       ← onLayout para CHART_WIDTH real (fix overflow no web);
+                                              barras com valor=0 renderizam com altura mínima (fix SVG inválido);
+                                              modal perfil comportamental em View absoluta (respeita container 430px);
+                                              modal confirmação humor movido para fora do ScrollView (idem);
+                                              Dimensions removido dos imports
+
+mobile/App.js                               ← wrapper web: Platform.OS==='web' centraliza em 430×932px
+                                              com fundo escuro — resolve responsividade no browser
+```
+**Railway — configurações adicionadas:**
+- Serviço Redis adicionado ao projeto (New → Database → Redis)
+- Variável `REDIS_URL` adicionada ao serviço backend (referência automática do Redis)
+- Bull Board confirmado em funcionamento: job testado e concluído em 148ms
+- Gabriel adicionado como membro do projeto Railway
+
+**Sessão incluiu também (sem alterações em código):**
+- Explicação completa de mensageria, Redis, BullMQ, filas, GCP Pub/Sub vs BullMQ
+- Roteiro para apresentação da parte de mineração de dados
+- Explicação do K-Means (sem taxa de acerto) e Árvore de Decisão (complementar, max_depth=3)
+- Relatório da sessão de mensageria para repasse ao colega Gabriel
+
+---
 
 ### Sessão 02/06/2026 — Redesign visual web + mobile Railway fix (Gabriel)
 ```
@@ -496,13 +542,7 @@ README.md                                   ← atualizado com tabela de telas e
    - Markdown: `Documentação/Relatorio_Final_PI.md`
    - PDF: `Documentação/Relatorio_Final_PI.pdf`
 
-3. **Mensageria — BullMQ + Redis** ✅ IMPLEMENTADO (código pronto, falta configurar Railway)
-   - `bullmq`, `ioredis`, `@bull-board/api`, `@bull-board/express` instalados no backend
-   - `backend/src/queues/classifyQueue.js` — cria a fila (graceful degradation sem Redis)
-   - `backend/src/workers/classifyWorker.js` — processa os jobs (lógica do classifyService)
-   - `moodController.js` — usa a fila se Redis disponível, fallback para classifyService
-   - `server.js` — inicia o worker + monta Bull Board em `/admin/queues`
-   - **PENDENTE:** Adicionar Redis no Railway (painel web → New → Redis) e copiar `REDIS_URL` como variável do serviço backend, depois fazer deploy
+3. ~~**Mensageria — BullMQ + Redis**~~ ✅ CONCLUÍDO em 03/06/2026 — funcionando em produção.
      - Bull Board como painel visual em `/admin/queues` — mostra jobs waiting/active/completed/failed em tempo real
      - Implementa o mesmo padrão Pub/Sub: publisher → fila → worker/consumer
    - **Mensagem enviada ao professor (02/06):**
