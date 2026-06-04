@@ -496,11 +496,13 @@ README.md                                   ← atualizado com tabela de telas e
    - Markdown: `Documentação/Relatorio_Final_PI.md`
    - PDF: `Documentação/Relatorio_Final_PI.pdf`
 
-3. **Mensageria (Pub/Sub)** — ⏳ AGUARDANDO RESPOSTA DO PROFESSOR.
-   - Professor liberou a disciplina de Computação em Nuvem II para fazer "do jeito que quiser", exige Pub/Sub + nuvem
-   - **Solução proposta:** BullMQ + Redis no Railway (sem GCP, sem cartão de crédito, sem JSON de credenciais)
-     - BullMQ é uma biblioteca Node.js; Redis é o broker da fila
-     - Railway já oferece Redis gerenciado nativo (igual ao PostgreSQL que já usamos)
+3. **Mensageria — BullMQ + Redis** ✅ IMPLEMENTADO (código pronto, falta configurar Railway)
+   - `bullmq`, `ioredis`, `@bull-board/api`, `@bull-board/express` instalados no backend
+   - `backend/src/queues/classifyQueue.js` — cria a fila (graceful degradation sem Redis)
+   - `backend/src/workers/classifyWorker.js` — processa os jobs (lógica do classifyService)
+   - `moodController.js` — usa a fila se Redis disponível, fallback para classifyService
+   - `server.js` — inicia o worker + monta Bull Board em `/admin/queues`
+   - **PENDENTE:** Adicionar Redis no Railway (painel web → New → Redis) e copiar `REDIS_URL` como variável do serviço backend, depois fazer deploy
      - Bull Board como painel visual em `/admin/queues` — mostra jobs waiting/active/completed/failed em tempo real
      - Implementa o mesmo padrão Pub/Sub: publisher → fila → worker/consumer
    - **Mensagem enviada ao professor (02/06):**

@@ -1,13 +1,38 @@
 require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const swaggerUi = require('swagger-ui-express');
+const express    = require('express');
+const cors       = require('cors');
+const swaggerUi  = require('swagger-ui-express');
 const swaggerSpec = require('./docs/swagger');
+
+const { createBullBoard }    = require('@bull-board/api');
+const { BullMQAdapter }      = require('@bull-board/api/bullMQAdapter');
+const { ExpressAdapter }     = require('@bull-board/express');
+
+const { classifyQueue, connection } = require('./queues/classifyQueue');
+const { iniciarWorker }             = require('./workers/classifyWorker');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ── Bull Board (painel visual da fila) ───────────────────────────────────────
+if (classifyQueue) {
+  const serverAdapter = new ExpressAdapter();
+  serverAdapter.setBasePath('/admin/queues');
+
+  createBullBoard({
+    queues: [new BullMQAdapter(classifyQueue)],
+    serverAdapter,
+  });
+
+  app.use('/admin/queues', serverAdapter.getRouter());
+  console.log('Bull Board disponível em /admin/queues');
+
+  // Inicia o worker de classificação
+  iniciarWorker(connection);
+}
+
+// ── Rotas ─────────────────────────────────────────────────────────────────────
 const authRoutes      = require('./routes/authRoutes');
 const userRoutes      = require('./routes/userRoutes');
 const moodRoutes      = require('./routes/moodRoutes');
