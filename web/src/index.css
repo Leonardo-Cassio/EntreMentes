@@ -33,6 +33,12 @@
   /* --text-on-color mantém #FFFFFF mesmo no dark */
 }
 
+/* Dark mode substitui o gradiente claro por fundo sólido escuro */
+[data-theme="dark"] body {
+  background: var(--bg);
+  background-attachment: fixed;
+}
+
 * {
   margin: 0;
   padding: 0;

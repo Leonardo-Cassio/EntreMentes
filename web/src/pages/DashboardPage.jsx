@@ -233,6 +233,36 @@ function TooltipHumor({ active, payload, label }) {
   );
 }
 
+// ── Card de frase do dia — componente isolado para não re-renderizar o pai ──
+function FraseDoDia() {
+  const frase = getFraseDoDia();
+  const [texto, setTexto] = useState('');
+
+  useEffect(() => {
+    let i = 0;
+    let intervalId;
+    const timeoutId = setTimeout(() => {
+      intervalId = setInterval(() => {
+        i++;
+        setTexto(frase.frase.slice(0, i));
+        if (i >= frase.frase.length) clearInterval(intervalId);
+      }, Math.floor(5000 / frase.frase.length)); // sempre 5s no total
+    }, 800);
+    return () => { clearTimeout(timeoutId); clearInterval(intervalId); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div className="frase-do-dia">
+      <span className="frase-aspas">&ldquo;</span>
+      <div className="frase-texto-wrapper">
+        <p className="frase-texto frase-texto-ghost" aria-hidden="true">{frase.frase}</p>
+        <p className="frase-texto frase-texto-animado">{texto}</p>
+      </div>
+      <span className="frase-autor">{frase.autor}</span>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
@@ -249,7 +279,7 @@ export default function DashboardPage() {
   const [loadingRegistros, setLoadingRegistros] = useState(true);
   const [perfil, setPerfil]                     = useState(null);
   const [loadingPerfil, setLoadingPerfil]       = useState(true);
-  const [darkMode,]                 = useState(
+  const [darkMode, setDarkMode]     = useState(
     () => localStorage.getItem('theme') === 'dark',
   );
 
@@ -259,11 +289,8 @@ export default function DashboardPage() {
   }, [darkMode]);
 
   // ── Efeito de digitação na saudação ──────────────────────────────────────
-  const [saudacaoTexto, setSaudacaoTexto]         = useState('');
-  const [saudacaoCompleta, setSaudacaoCompleta]   = useState(false);
-
-  // ── Efeito de digitação na frase do dia (bem devagar) ────────────────────
-  const [fraseTexto, setFraseTexto] = useState('');
+  const [saudacaoTexto, setSaudacaoTexto]       = useState('');
+  const [saudacaoCompleta, setSaudacaoCompleta] = useState(false);
 
   useEffect(() => {
     if (!user?.name) return;
@@ -277,28 +304,11 @@ export default function DashboardPage() {
       setSaudacaoTexto(completo.slice(0, i));
       if (i >= completo.length) {
         clearInterval(t);
-        // cursor some 1.2s depois de terminar
         setTimeout(() => setSaudacaoCompleta(true), 1200);
       }
     }, 55);
     return () => clearInterval(t);
   }, [user?.name]);
-
-  useEffect(() => {
-    const frase = getFraseDoDia().frase;
-    let i = 0;
-    setFraseTexto('');
-    let intervalId;
-    // pequeno delay antes de começar a digitar
-    const timeoutId = setTimeout(() => {
-      intervalId = setInterval(() => {
-        i++;
-        setFraseTexto(frase.slice(0, i));
-        if (i >= frase.length) clearInterval(intervalId);
-      }, 35); // 35 ms por caractere
-    }, 800);
-    return () => { clearTimeout(timeoutId); clearInterval(intervalId); };
-  }, []);
 
   useEffect(() => {
     if (!token) { setLoadingRegistros(false); setLoadingPerfil(false); return; }
@@ -329,7 +339,6 @@ export default function DashboardPage() {
   ];
 
   const humorAtual  = EMOJIS.find(e => e.nivel === humorSelecionado);
-  const fraseDoDia  = getFraseDoDia();
 
   const handleSelecionarHumor = (nivel) => {
     setHumorSelecionado(nivel);
@@ -362,17 +371,17 @@ export default function DashboardPage() {
             <p className="dashboard-subtitulo">Como você está se sentindo hoje?</p>
           </div>
 
-          {/* Frase do Dia */}
-          <div className="frase-do-dia">
-            <span className="frase-aspas">&ldquo;</span>
-            <div className="frase-texto-wrapper">
-              {/* texto fantasma: reserva o espaço final, invisível */}
-              <p className="frase-texto frase-texto-ghost" aria-hidden="true">{fraseDoDia.frase}</p>
-              {/* texto animado sobreposto */}
-              <p className="frase-texto frase-texto-animado">{fraseTexto}</p>
-            </div>
-            <span className="frase-autor">{fraseDoDia.autor}</span>
-          </div>
+          <button className="tema-toggle" onClick={() => setDarkMode(d => !d)} aria-label="Alternar tema">
+            <span className={`tema-label ${darkMode ? 'tema-visivel' : 'tema-oculto'}`}>Dark</span>
+            <span className={`tema-label ${!darkMode ? 'tema-visivel' : 'tema-oculto'}`}>Light</span>
+            <span className="tema-emoji-wrap">
+              <span className={`tema-emoji ${darkMode ? 'tema-visivel' : 'tema-oculto'}`}>🌙</span>
+              <span className={`tema-emoji ${!darkMode ? 'tema-visivel' : 'tema-oculto'}`}>☀️</span>
+            </span>
+          </button>
+
+          {/* Frase do Dia — componente isolado para não re-renderizar o pai */}
+          <FraseDoDia />
         </section>
 
         {/* Seletor de humor rápido */}

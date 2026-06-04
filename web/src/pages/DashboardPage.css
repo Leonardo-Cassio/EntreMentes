@@ -95,8 +95,9 @@
 .dashboard-layout {
   display: flex;
   height: 100vh;
-  background: transparent;
+  background: var(--bg);
   overflow: hidden;
+  transition: background 0.35s ease;
 }
 
 /* ── Main ────────────────────────────────────────────────────────────────── */
