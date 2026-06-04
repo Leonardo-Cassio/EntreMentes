@@ -6,6 +6,7 @@
   display: flex;
   flex-direction: column;
   padding: 28px 16px 24px;
+  transition: background 0.35s ease, border-color 0.35s ease;
 }
 
 .sidebar-logo {
@@ -71,6 +72,68 @@
   color: var(--primary);
   font-weight: 600;
 }
+
+/* ── Toggle de tema ──────────────────────────────────────────────────────── */
+.sidebar-tema {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 4px 6px;
+}
+
+.tema-switch {
+  position: relative;
+  width: 52px;
+  height: 26px;
+  border-radius: 99px;
+  background: var(--white);
+  border: 2px solid #A0ADB5;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.4s ease;
+  flex-shrink: 0;
+}
+
+.tema-switch.tema-switch-dark {
+  border-color: #4A4570;
+}
+
+.tema-switch-knob {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.18);
+  transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.tema-switch.tema-switch-dark .tema-switch-knob {
+  transform: translateX(26px);
+}
+
+/* Ícones sobrepostos dentro do knob */
+.tema-icon-sun,
+.tema-icon-moon {
+  position: absolute;
+  font-size: 12px;
+  line-height: 1;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* Light mode: sol visível, lua oculta */
+.tema-icon-sun  { opacity: 1; transform: scale(1);    }
+.tema-icon-moon { opacity: 0; transform: scale(0.6);  }
+
+/* Dark mode: lua visível, sol oculto */
+.tema-switch-dark .tema-icon-sun  { opacity: 0; transform: scale(0.6); }
+.tema-switch-dark .tema-icon-moon { opacity: 1; transform: scale(1);   }
 
 .sidebar-bottom {
   border-top: 1px solid var(--border);

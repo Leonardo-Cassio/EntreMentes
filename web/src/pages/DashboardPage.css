@@ -143,59 +143,6 @@
   50%       { opacity: 0; }
 }
 
-/* ── Botão de tema (light/dark) ──────────────────────────────────────────── */
-.tema-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--white);
-  border: 1.5px solid var(--border);
-  border-radius: 99px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  transition: border-color 0.25s, background 0.35s, color 0.25s, box-shadow 0.25s;
-  user-select: none;
-  white-space: nowrap;
-}
-
-.tema-toggle:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-  box-shadow: 0 2px 12px rgba(108, 92, 231, 0.15);
-}
-
-/* Wrapper do texto — ocupa espaço fixo para não mudar o tamanho do botão */
-.tema-toggle .tema-label {
-  position: relative;
-  display: inline-block;
-  width: 36px;
-  text-align: right;
-  transition: opacity 0.4s ease;
-}
-
-/* Wrapper dos emojis sobrepostos */
-.tema-emoji-wrap {
-  position: relative;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.tema-emoji {
-  position: absolute;
-  font-size: 17px;
-  line-height: 1;
-  transition: opacity 0.4s ease;
-}
-
-.tema-visivel { opacity: 1; }
-.tema-oculto  { opacity: 0; pointer-events: none; }
 
 .dashboard-subtitulo {
   font-size: 15px;
@@ -218,8 +165,8 @@
   align-items: center;
   gap: 9px;
   cursor: pointer;
-  transition: box-shadow 0.24s cubic-bezier(0.22, 1, 0.36, 1), transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.24s cubic-bezier(0.22, 1, 0.36, 1), transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), background 0.35s ease, border-color 0.35s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.07);
 }
 
 /* Todos os cards com fundo neutro */
@@ -229,7 +176,7 @@
 .emoji-nivel-4,
 .emoji-nivel-5 {
   background: var(--white);
-  border-color: var(--border);
+  border-color: rgba(180, 190, 195, 0.7);
 }
 
 /* Hover — mesma elevação dos metric cards */
@@ -244,7 +191,7 @@
 .emoji-nivel-3.ativo,
 .emoji-nivel-4.ativo,
 .emoji-nivel-5.ativo {
-  background: #F3F1FF;
+  background: rgba(108, 92, 231, 0.12);
   border-color: var(--primary);
   box-shadow: 0 4px 14px rgba(108, 92, 231, 0.18);
 }
@@ -286,8 +233,9 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  border: 1px solid rgba(223, 230, 233, 0.8);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(180, 190, 195, 0.7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.07);
+  transition: background 0.35s ease, border-color 0.35s ease;
 }
 
 /* Ícone SVG dentro do container colorido */
@@ -327,7 +275,7 @@
 /* Todos os cards são clicáveis */
 .metrica-clicavel {
   cursor: pointer;
-  transition: box-shadow 0.24s cubic-bezier(0.22, 1, 0.36, 1), transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: box-shadow 0.24s cubic-bezier(0.22, 1, 0.36, 1), transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), background 0.35s ease, border-color 0.35s ease;
 }
 
 .metrica-clicavel:hover {
@@ -757,13 +705,14 @@
   background: var(--white);
   border-radius: 20px;
   padding: 28px;
-  border: 1px solid rgba(223, 230, 233, 0.8);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(180, 190, 195, 0.7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.07);
+  transition: background 0.35s ease, border-color 0.35s ease;
 }
 
 .chart-card-interativo {
   cursor: pointer;
-  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s, background 0.35s ease, border-color 0.35s ease;
 }
 
 .chart-card-interativo:hover {
@@ -872,12 +821,13 @@
   background: var(--white);
   border-radius: 20px;
   padding: 26px 30px;
-  border: 1px solid rgba(223, 230, 233, 0.8);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(180, 190, 195, 0.7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.07);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+  transition: background 0.35s ease, border-color 0.35s ease;
 }
 
 .avaliacao-titulo {
@@ -919,13 +869,14 @@
   padding: 20px 24px 18px;
   max-width: 340px;
   min-width: 260px;
-  border: 1px solid rgba(223, 230, 233, 0.8);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(180, 190, 195, 0.7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.07);
   display: flex;
   flex-direction: column;
   gap: 6px;
   flex-shrink: 0;
   position: relative;
+  transition: background 0.35s ease, border-color 0.35s ease;
 }
 
 /* Aspas decorativas — roxo 70% */

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
@@ -89,6 +89,15 @@ export default function Sidebar() {
   const { user, token, logout } = useAuth();
   const [modalExcluir, setModalExcluir] = useState(false);
 
+  const [darkMode, setDarkMode] = useState(
+    () => localStorage.getItem('theme') === 'dark',
+  );
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+    localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
+
   const iniciais = user?.name
     ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : 'US';
@@ -126,6 +135,20 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Toggle tema */}
+      <div className="sidebar-tema">
+        <button
+          className={`tema-switch ${darkMode ? 'tema-switch-dark' : ''}`}
+          onClick={() => setDarkMode(d => !d)}
+          aria-label="Alternar tema"
+        >
+          <span className="tema-switch-knob">
+            <span className="tema-icon-sun">☀️</span>
+            <span className="tema-icon-moon">🌙</span>
+          </span>
+        </button>
+      </div>
 
       <div className="sidebar-bottom">
         <div className="sidebar-usuario">
