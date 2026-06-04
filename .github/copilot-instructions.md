@@ -16,12 +16,14 @@ retomar exatamente de onde o anterior parou.
 
 ## Estado atual do desenvolvimento
 
-> **Última atualização:** 2026-06-03 (sessão mensageria BullMQ + Redis + sync mobile — Leonardo)
+> **Última atualização:** 2026-06-04 (sessão dark mode web + deploy Vercel — Leonardo)
 > **Sprint 2 apresentada com sucesso — sem objeções dos professores ✅**
 > **Sprint 3 em andamento — todo o Bloco C frontend concluído ✅**
 > **Mensageria implementada com BullMQ + Redis no Railway ✅ — Bull Board ativo em /admin/queues**
 > **Mobile sincronizado com web (Perfil, Estatísticas, modais, gráficos) ✅**
 > **Deploy Railway concluído — backend + PostgreSQL + mining-service + Redis online ✅**
+> **Deploy Vercel concluído — frontend web acessível em https://entre-mentes.vercel.app ✅**
+> **Dark mode implementado no web com persistência via localStorage ✅**
 > **Páginas "Meu Perfil" e "Estatísticas" adicionadas ao web e mobile ✅**
 > **Relatório Final do PI criado e exportado como PDF ✅**
 > **Roteiro do vídeo de demonstração criado ✅**
@@ -169,6 +171,46 @@ retomar exatamente de onde o anterior parou.
 ---
 
 ## Histórico de sessões
+
+### Sessão 04/06/2026 — Dark mode web + deploy Vercel (Leonardo)
+```
+web/index.html                          ← script inline que aplica data-theme antes do React
+                                          (garante persistência do tema em qualquer página)
+web/src/index.css                       ← [data-theme="dark"] com variáveis escuras;
+                                          --text-on-color (sempre #fff, para botões/gradientes);
+                                          --input-bg (branco no light, #2A2A3D no dark);
+                                          transition em body para troca suave
+web/src/pages/DashboardPage.jsx         ← estado darkMode + useEffect que aplica data-theme
+                                          e persiste no localStorage; botão tema no header
+web/src/pages/DashboardPage.css         ← estilos .tema-toggle, .tema-label, .tema-emoji-wrap;
+                                          .chart-tooltip com fundo branco fixo + texto escuro;
+                                          .dashboard-layout usa var(--surface)
+web/src/pages/HistoricoPage.css         ← reescrito com variáveis CSS (era 100% hardcoded)
+web/src/pages/RegistroDiarioPage.css    ← #F3F1FF → rgba(108,92,231,0.08)
+web/src/pages/PerfilPage.css            ← transition adicionada ao .perfil-card
+web/src/pages/EstatisticasPage.css      ← transition adicionada ao .est-chart-card
+web/src/pages/EstatisticasPage.jsx      ← HUMOR_CORES: rgba transparente → cores sólidas
+                                          (evita grid visível através das barras);
+                                          CartesianGrid stroke → var(--border)
+web/src/components/Sidebar.css          ← .sidebar-nav-item.ativo: #EDE9FF → rgba(108,92,231,0.12)
+web/src/components/Input.css            ← usa --input-bg; fix autofill webkit para dark mode
+web/src/components/Button.css           ← .btn-primary e .btn-dark: color → var(--text-on-color)
+web/src/App.css                         ← textos sobre gradiente: var(--white) → var(--text-on-color)
+web/.env                                ← VITE_API_URL=https://entrementes-production.up.railway.app
+README.md                               ← link Vercel adicionado na tabela de deploy
+```
+**Deploy Vercel:**
+- URL: `https://entre-mentes.vercel.app`
+- Root Directory: `web/`
+- Variável `VITE_API_URL` configurada no dashboard do Vercel
+- Deploy automático a cada `git push` no main
+- Gabriel adicionado como membro do projeto Vercel
+
+**Diferenças web × mobile identificadas (pendentes):**
+- Dark mode: implementado no web, **não implementado no mobile**
+- Frase motivacional diária: presente no web Dashboard, **não existe no mobile**
+
+---
 
 ### Sessão 03/06/2026 — Mensageria BullMQ + Redis + sync mobile (Leonardo)
 ```
@@ -513,11 +555,14 @@ README.md                                   ← atualizado com tabela de telas e
 
 | Serviço | URL |
 |---------|-----|
+| Web (frontend) | `https://entre-mentes.vercel.app` — Vercel, deploy automático no push |
 | API REST (produção) | `https://entrementes-production.up.railway.app` |
 | Mining Service (produção) | `https://zestful-adventure-production-4e44.up.railway.app` |
+| Bull Board (fila) | `https://entrementes-production.up.railway.app/admin/queues` |
 | Swagger UI (produção) | `https://entrementes-production.up.railway.app/docs` |
 | Swagger UI (local) | `http://localhost:3000/docs` |
 | Railway dashboard | `https://railway.app` — conta Leonardo |
+| Vercel dashboard | `https://vercel.com` — conta Leonardo |
 
 ### Observações importantes sobre o deploy
 - O **mining-service** está deployado no Railway (`https://zestful-adventure-production-4e44.up.railway.app`). A variável `MINING_SERVICE_URL` no serviço backend aponta para ele. Classificação de perfil funciona em produção.

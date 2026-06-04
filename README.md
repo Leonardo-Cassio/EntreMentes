@@ -23,12 +23,13 @@ Todos os serviços se comunicam via HTTP/REST. A classificação de perfil compo
 
 | Serviço | URL |
 |---------|-----|
+| **Web (frontend)** | [entre-mentes.vercel.app](https://entre-mentes.vercel.app) |
 | API REST | `https://entrementes-production.up.railway.app` |
 | Mining Service | `https://zestful-adventure-production-4e44.up.railway.app` |
 | Swagger UI | `https://entrementes-production.up.railway.app/docs` |
 | Bull Board (fila) | `https://entrementes-production.up.railway.app/admin/queues` |
 
-Todos os serviços estão hospedados no **Railway**. O banco de dados é um PostgreSQL gerenciado e o Redis é o broker da fila de mensagens, ambos provisionados pelo Railway.
+O frontend está hospedado no **Vercel** (deploy automático a cada `git push`). O backend, banco de dados, Redis e mining-service estão no **Railway**.
 
 ---
 
