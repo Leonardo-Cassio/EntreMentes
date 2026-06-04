@@ -181,3 +181,303 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ── Botões de ação no card ───────────────────────────────────────────────── */
+.historico-acoes {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.historico-card:hover .historico-acoes {
+  opacity: 1;
+}
+
+.historico-acao-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  padding: 0;
+}
+
+.historico-acao-btn.editar:hover {
+  background: rgba(108, 92, 231, 0.1);
+  border-color: #6C5CE7;
+}
+
+.historico-acao-btn.excluir:hover {
+  background: rgba(229, 62, 62, 0.1);
+  border-color: #E53E3E;
+}
+
+/* ── Overlay e Modal base ─────────────────────────────────────────────────── */
+.hm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.hm-modal {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+  transition: background 0.35s;
+}
+
+.hm-modal-pequeno {
+  max-width: 360px;
+  align-items: center;
+  text-align: center;
+}
+
+/* ── Cabeçalho do modal ───────────────────────────────────────────────────── */
+.hm-modal-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hm-modal-titulo {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.hm-modal-data {
+  font-size: 12px;
+  color: var(--text-light);
+  white-space: nowrap;
+}
+
+/* ── Campos genéricos ─────────────────────────────────────────────────────── */
+.hm-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.hm-campo {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Emojis de humor ──────────────────────────────────────────────────────── */
+.hm-emojis {
+  display: flex;
+  gap: 8px;
+}
+
+.hm-emoji-btn {
+  font-size: 28px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background: var(--surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+
+.hm-emoji-btn:hover  { transform: scale(1.1); }
+.hm-emoji-btn.ativo  { border-color: #6C5CE7; background: rgba(108, 92, 231, 0.12); }
+
+/* ── Opções (botões de seleção) ───────────────────────────────────────────── */
+.hm-opcoes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hm-opcao-btn {
+  padding: 6px 16px;
+  border-radius: 99px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  font-family: inherit;
+}
+
+.hm-opcao-btn:hover { border-color: #6C5CE7; color: #6C5CE7; }
+.hm-opcao-btn.ativo { border-color: #6C5CE7; background: rgba(108, 92, 231, 0.12); color: #6C5CE7; font-weight: 600; }
+
+/* ── Toggle ansiedade ─────────────────────────────────────────────────────── */
+.hm-toggle {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  font-family: inherit;
+  align-self: flex-start;
+}
+
+.hm-toggle.ativo {
+  border-color: #6C5CE7;
+  background: rgba(108, 92, 231, 0.1);
+  color: #6C5CE7;
+}
+
+/* ── Sliders ──────────────────────────────────────────────────────────────── */
+.hm-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hm-slider-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hm-slider-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hm-slider-valor {
+  font-size: 13px;
+  font-weight: 700;
+  color: #6C5CE7;
+}
+
+.hm-slider {
+  width: 100%;
+  accent-color: #6C5CE7;
+  height: 4px;
+  cursor: pointer;
+}
+
+/* ── Linha dupla ──────────────────────────────────────────────────────────── */
+.hm-linha-dupla {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.hm-linha-dupla .hm-campo {
+  flex: 1;
+  min-width: 180px;
+}
+
+/* ── Textarea ─────────────────────────────────────────────────────────────── */
+.hm-textarea {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface);
+  resize: none;
+  outline: none;
+  transition: border-color 0.15s, background 0.35s;
+}
+
+.hm-textarea:focus { border-color: #6C5CE7; }
+
+/* ── Botões do modal ──────────────────────────────────────────────────────── */
+.hm-modal-botoes {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.hm-btn-cancelar {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.hm-btn-cancelar:hover  { background: var(--surface); }
+.hm-btn-cancelar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.hm-btn-salvar {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: none;
+  background: #6C5CE7;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.hm-btn-salvar:hover    { background: #5a4dbd; }
+.hm-btn-salvar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Modal de exclusão ────────────────────────────────────────────────────── */
+.hm-excluir-icone {
+  font-size: 40px;
+}
+
+.hm-excluir-texto {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.hm-btn-excluir {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: none;
+  background: #E53E3E;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.hm-btn-excluir:hover    { background: #C53030; }
+.hm-btn-excluir:disabled { opacity: 0.6; cursor: not-allowed; }

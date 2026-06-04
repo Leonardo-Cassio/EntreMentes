@@ -50,6 +50,21 @@ exports.update = async (req, res) => {
   try {
     const entry = await moodService.update(req.params.id, req.userId, req.body);
     res.json({ success: true, data: entry, message: "Registro atualizado com sucesso" });
+
+    // Re-classifica com os dados atualizados (mesma lógica do create)
+    if (classifyQueue) {
+      classifyQueue.add('classificar', {
+        userId:              req.userId,
+        nivelHumor:          entry.nivelHumor,
+        nivelEstresse:       entry.nivelEstresse,
+        ansiedadeAntesProva: entry.ansiedadeAntesProva,
+        duracaoSono:         entry.duracaoSono,
+        tempoTela:           entry.tempoTela,
+        atividadeFisica:     entry.atividadeFisica,
+      }).catch(() => {});
+    } else {
+      classifyService.classificarEAtualizar(req.userId, entry);
+    }
   } catch (err) {
     res.status(400).json({ success: false, data: null, message: err.message });
   }
